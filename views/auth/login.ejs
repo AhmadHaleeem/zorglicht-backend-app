@@ -58,6 +58,102 @@
             font-size: 3rem;
             margin-bottom: 1rem;
         }
+        
+        /* Mobile-specific styles for password field */
+        @media (max-width: 576px) {
+            .login-container {
+                margin: 1rem;
+                max-width: calc(100% - 2rem);
+            }
+            
+            .login-header {
+                padding: 1.5rem;
+            }
+            
+            .login-body {
+                padding: 1.5rem;
+            }
+            
+            .form-control {
+                font-size: 16px; /* Prevent zoom on iOS */
+                padding: 15px;
+            }
+            
+            /* Fix password input group on mobile - Strong overrides */
+              .password-input-group {
+                  display: flex !important;
+                  flex-direction: row !important;
+                  width: 100% !important;
+                  flex-wrap: nowrap !important;
+              }
+              
+              .password-input-group > * {
+                  margin-bottom: 0 !important;
+              }
+              
+              .password-input-group .form-control {
+                  border-top-right-radius: 0 !important;
+                  border-bottom-right-radius: 0 !important;
+                  margin-bottom: 0 !important;
+                  flex: 1 !important;
+                  border-right: none !important;
+                  width: auto !important;
+              }
+              
+              .password-input-group .btn {
+                  border-top-left-radius: 0 !important;
+                  border-bottom-left-radius: 0 !important;
+                  margin-bottom: 0 !important;
+                  min-width: 50px !important;
+                  width: 50px !important;
+                  padding: 15px 12px !important;
+                  border-left: 1px solid #d1d3e2 !important;
+                  display: flex !important;
+                  align-items: center !important;
+                  justify-content: center !important;
+                  flex-shrink: 0 !important;
+              }
+              
+              /* Strongest possible overrides for mobile input-group */
+              .login-body .password-input-group.input-group {
+                  display: flex !important;
+                  flex-direction: row !important;
+                  flex-wrap: nowrap !important;
+              }
+              
+              .login-body .password-input-group.input-group > .form-control,
+              .login-body .password-input-group.input-group > .btn {
+                  margin-bottom: 0 !important;
+                  border-radius: 0 !important;
+                  flex-shrink: 0;
+              }
+              
+              .login-body .password-input-group.input-group > .form-control {
+                  flex: 1 !important;
+                  border-top-left-radius: 10px !important;
+                  border-bottom-left-radius: 10px !important;
+                  border-right: none !important;
+              }
+              
+              .login-body .password-input-group.input-group > .btn {
+                  border-top-right-radius: 10px !important;
+                  border-bottom-right-radius: 10px !important;
+                  border-left: 1px solid #d1d3e2 !important;
+              }
+              
+              /* Additional safety overrides */
+              .password-input-group * {
+                  box-sizing: border-box !important;
+              }
+            
+            .healthcare-icon {
+                font-size: 2.5rem;
+            }
+            
+            .login-header h2 {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -104,7 +200,7 @@
                     <label for="password" class="form-label">
                         <i class="bi bi-lock me-2"></i>Wachtwoord
                     </label>
-                    <div class="input-group">
+                    <div class="input-group password-input-group">
                         <input type="password" class="form-control" id="password" name="password" required 
                                placeholder="Voer uw wachtwoord in">
                         <button class="btn btn-outline-secondary" type="button" id="togglePassword">
