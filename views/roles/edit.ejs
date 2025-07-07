@@ -1,0 +1,324 @@
+<% layout('layout') -%>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Rol Bewerken</h2>
+    <div>
+        <a href="/rollen/<%= role.id %>" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-2"></i>
+            Terug naar Details
+        </a>
+        <a href="/rollen" class="btn btn-outline-secondary">
+            <i class="fas fa-list me-2"></i>
+            Alle Rollen
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fas fa-user-edit me-2"></i>
+                    Rol Informatie Bewerken
+                </h6>
+            </div>
+            <div class="card-body">
+                <form action="/rollen/<%= role.id %>" method="POST">
+                    <input type="hidden" name="_method" value="PUT">
+                    
+                    <div class="mb-3">
+                        <label for="naam" class="form-label">Rol Naam *</label>
+                        <input type="text" class="form-control" id="naam" name="naam" value="<%= role.naam %>" required>
+                        <div class="form-text">Geef de rol een duidelijke en beschrijvende naam</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="beschrijving" class="form-label">Beschrijving *</label>
+                        <textarea class="form-control" id="beschrijving" name="beschrijving" rows="3" required><%= role.beschrijving %></textarea>
+                        <div class="form-text">Beschrijf wat deze rol inhoudt en welke verantwoordelijkheden erbij horen</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Machtigingen *</label>
+                        <div class="form-text mb-3">Selecteer de machtigingen die bij deze rol horen</div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Basis Machtigingen</h6>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="read" name="machtigingen" value="read" 
+                                           <%= role.machtigingen.includes('read') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="read">
+                                        <i class="fas fa-eye me-2 text-info"></i>
+                                        <strong>Lezen</strong>
+                                        <div class="small text-muted">Kan gegevens bekijken en lezen</div>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="create" name="machtigingen" value="create"
+                                           <%= role.machtigingen.includes('create') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="create">
+                                        <i class="fas fa-plus me-2 text-success"></i>
+                                        <strong>Aanmaken</strong>
+                                        <div class="small text-muted">Kan nieuwe gegevens aanmaken</div>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="update" name="machtigingen" value="update"
+                                           <%= role.machtigingen.includes('update') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="update">
+                                        <i class="fas fa-edit me-2 text-warning"></i>
+                                        <strong>Bewerken</strong>
+                                        <div class="small text-muted">Kan bestaande gegevens wijzigen</div>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="delete" name="machtigingen" value="delete"
+                                           <%= role.machtigingen.includes('delete') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="delete">
+                                        <i class="fas fa-trash me-2 text-danger"></i>
+                                        <strong>Verwijderen</strong>
+                                        <div class="small text-muted">Kan gegevens permanent verwijderen</div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Geavanceerde Machtigingen</h6>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="admin" name="machtigingen" value="admin"
+                                           <%= role.machtigingen.includes('admin') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="admin">
+                                        <i class="fas fa-crown me-2 text-warning"></i>
+                                        <strong>Administrator</strong>
+                                        <div class="small text-muted">Volledige toegang tot alle functies</div>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="team_management" name="machtigingen" value="team_management"
+                                           <%= role.machtigingen.includes('team_management') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="team_management">
+                                        <i class="fas fa-users-cog me-2 text-primary"></i>
+                                        <strong>Team Beheer</strong>
+                                        <div class="small text-muted">Kan teams en werknemers beheren</div>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="code_access" name="machtigingen" value="code_access"
+                                           <%= role.machtigingen.includes('code_access') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="code_access">
+                                        <i class="fas fa-code me-2 text-info"></i>
+                                        <strong>Code Toegang</strong>
+                                        <div class="small text-muted">Toegang tot ontwikkelingstools</div>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="reports" name="machtigingen" value="reports"
+                                           <%= role.machtigingen.includes('reports') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="reports">
+                                        <i class="fas fa-chart-bar me-2 text-success"></i>
+                                        <strong>Rapportages</strong>
+                                        <div class="small text-muted">Kan rapporten genereren en bekijken</div>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="settings" name="machtigingen" value="settings"
+                                           <%= role.machtigingen.includes('settings') ? 'checked' : '' %>>
+                                    <label class="form-check-label" for="settings">
+                                        <i class="fas fa-cog me-2 text-secondary"></i>
+                                        <strong>Instellingen</strong>
+                                        <div class="small text-muted">Kan systeeminstellingen wijzigen</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Let op:</strong> Het wijzigen van machtigingen heeft direct invloed op alle werknemers met deze rol.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="/rollen/<%= role.id %>" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>
+                            Annuleren
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>
+                            Wijzigingen Opslaan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-user-tag me-2"></i>
+                    Huidige Rol
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="mb-2">
+                        <i class="fas fa-user-tag fa-3x text-primary"></i>
+                    </div>
+                    <h5><%= role.naam %></h5>
+                    <p class="text-muted"><%= role.beschrijving %></p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <strong>Huidige Machtigingen:</strong><br>
+                    <div class="mt-2">
+                        <% role.machtigingen.forEach(permission => { %>
+                            <span class="badge bg-light text-dark me-1 mb-1"><%= permission %></span>
+                        <% }); %>
+                    </div>
+                </div>
+                
+                <div class="mb-2">
+                    <strong>Aantal Machtigingen:</strong><br>
+                    <span class="text-success"><%= role.machtigingen.length %></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-tools me-2"></i>
+                    Snelle Acties
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="selectBasicPermissions()">
+                        <i class="fas fa-check me-2"></i>
+                        Basis Machtigingen
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="selectAllPermissions()">
+                        <i class="fas fa-check-double me-2"></i>
+                        Alle Machtigingen
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllPermissions()">
+                        <i class="fas fa-times me-2"></i>
+                        Alles Wissen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Bewerkingstips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Wijzigingen hebben direct effect
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Test wijzigingen zorgvuldig
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Admin rechten geven volledige toegang
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Minimaal één machtiging is vereist
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const naam = document.getElementById('naam').value.trim();
+    const beschrijving = document.getElementById('beschrijving').value.trim();
+    const machtigingen = document.querySelectorAll('input[name="machtigingen"]:checked');
+    
+    let isValid = true;
+    
+    // Check required fields
+    if (!naam) {
+        document.getElementById('naam').classList.add('is-invalid');
+        isValid = false;
+    } else {
+        document.getElementById('naam').classList.remove('is-invalid');
+    }
+    
+    if (!beschrijving) {
+        document.getElementById('beschrijving').classList.add('is-invalid');
+        isValid = false;
+    } else {
+        document.getElementById('beschrijving').classList.remove('is-invalid');
+    }
+    
+    // Check if at least one permission is selected
+    if (machtigingen.length === 0) {
+        alert('Selecteer minimaal één machtiging voor deze rol.');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        e.preventDefault();
+    }
+});
+
+// Remove validation styling on input
+document.querySelectorAll('input, textarea').forEach(input => {
+    input.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+    });
+});
+
+// Quick select functions
+function selectBasicPermissions() {
+    // Clear all first
+    document.querySelectorAll('input[name="machtigingen"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    // Select basic permissions
+    ['read', 'create', 'update'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox) checkbox.checked = true;
+    });
+}
+
+function selectAllPermissions() {
+    document.querySelectorAll('input[name="machtigingen"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function clearAllPermissions() {
+    document.querySelectorAll('input[name="machtigingen"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+</script>

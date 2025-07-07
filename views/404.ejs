@@ -1,0 +1,98 @@
+<% layout('layout') -%>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="text-center mt-5">
+                <div class="error mx-auto" data-text="404">
+                    <p class="m-0" style="font-size: 7rem; color: var(--primary-color); font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">404</p>
+                </div>
+                <p class="lead text-gray-800 mb-5">Pagina Niet Gevonden</p>
+                <p class="text-gray-500 mb-0">Het lijkt erop dat je een pagina hebt gevonden die niet bestaat...</p>
+                <div class="mt-4">
+                    <a href="/" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Terug naar Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-question-circle me-2"></i>
+                        Wat kun je doen?
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-3">
+                                <i class="fas fa-home fa-3x text-primary"></i>
+                            </div>
+                            <h5>Dashboard</h5>
+                            <p class="text-muted">Ga terug naar het hoofddashboard</p>
+                            <a href="/" class="btn btn-outline-primary">
+                                <i class="fas fa-home me-2"></i>
+                                Dashboard
+                            </a>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-3">
+                                <i class="fas fa-users fa-3x text-success"></i>
+                            </div>
+                            <h5>Werknemers</h5>
+                            <p class="text-muted">Beheer werknemers en hun gegevens</p>
+                            <a href="/werknemers" class="btn btn-outline-success">
+                                <i class="fas fa-users me-2"></i>
+                                Werknemers
+                            </a>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="mb-3">
+                                <i class="fas fa-user-tag fa-3x text-warning"></i>
+                            </div>
+                            <h5>Rollen</h5>
+                            <p class="text-muted">Beheer rollen en machtigingen</p>
+                            <a href="/rollen" class="btn btn-outline-warning">
+                                <i class="fas fa-user-tag me-2"></i>
+                                Rollen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error {
+    position: relative;
+}
+
+.error::before {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    z-index: -1;
+    filter: blur(2px);
+    opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+    .error p {
+        font-size: 4rem !important;
+    }
+}
+</style>

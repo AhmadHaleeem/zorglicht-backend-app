@@ -1,0 +1,14 @@
+.env
+.env.example
+node_modules
+node_modules/*
+node_modules/.bin/ejs
+node_modules/.bin/jake
+node_modules/.bin/mime
+node_modules/.bin/mkdirp
+node_modules/.bin/nodemon
+node_modules/.bin/nodetouch
+node_modules/.bin/semver
+node_modules/.bin/uuid
+node_modules/.package-lock.json
+server.log

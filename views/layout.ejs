@@ -1,0 +1,60 @@
+<%- include('partials/header') %>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Main Content -->
+    <div class="container-fluid" style="margin-top: 76px;">
+        <div class="row">
+            <%- include('partials/sidebar') %>
+
+            <!-- Main content area -->
+            <main class="main-content px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><%= title %></h1>
+                </div>
+                
+                <!-- Flash messages -->
+                <% if (messages.success && messages.success.length > 0) { %>
+                    <% messages.success.forEach(function(msg) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <%- msg %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% }); %>
+                <% } %>
+                
+                <% if (messages.error && messages.error.length > 0) { %>
+                    <% messages.error.forEach(function(msg) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <%- msg %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% }); %>
+                <% } %>
+                
+                <% if (messages.warning && messages.warning.length > 0) { %>
+                    <% messages.warning.forEach(function(msg) { %>
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <%- msg %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% }); %>
+                <% } %>
+                
+                <% if (messages.info && messages.info.length > 0) { %>
+                    <% messages.info.forEach(function(msg) { %>
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <%- msg %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% }); %>
+                <% } %>
+                
+                <!-- Page content -->
+                <%- body %>
+            </main>
+        </div>
+    </div>
+
+<%- include('partials/footer') %>

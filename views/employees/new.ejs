@@ -1,0 +1,205 @@
+<% layout('layout') -%>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Nieuwe Werknemer Toevoegen</h2>
+    <a href="/werknemers" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Terug naar Werknemers
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Werknemer Informatie
+                </h6>
+            </div>
+            <div class="card-body">
+                <form action="/werknemers" method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="naam" class="form-label">Volledige Naam *</label>
+                            <input type="text" class="form-control" id="naam" name="naam" required>
+                            <div class="form-text">Voer de volledige naam van de werknemer in</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email Adres *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                            <div class="form-text">Zakelijk email adres</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="telefoon" class="form-label">Telefoonnummer</label>
+                            <input type="tel" class="form-control" id="telefoon" name="telefoon" placeholder="+31 6 12345678">
+                            <div class="form-text">Inclusief landcode</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="functie" class="form-label">Functietitel *</label>
+                            <input type="text" class="form-control" id="functie" name="functie" required>
+                            <div class="form-text">Officiële functietitel</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="afdeling" class="form-label">Afdeling *</label>
+                            <select class="form-select" id="afdeling" name="afdeling" required>
+                                <option value="">Selecteer afdeling...</option>
+                                <option value="IT">IT</option>
+                                <option value="Human Resources">Human Resources</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Verkoop">Verkoop</option>
+                                <option value="Financiën">Financiën</option>
+                                <option value="Operaties">Operaties</option>
+                                <option value="Klantenservice">Klantenservice</option>
+                                <option value="Onderzoek & Ontwikkeling">Onderzoek & Ontwikkeling</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Gebruikersrol</label>
+                            <input type="text" class="form-control" value="Gebruiker" readonly>
+                            <div class="form-text">Nieuwe werknemers worden automatisch als gebruiker aangemaakt</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="startdatum" class="form-label">Startdatum *</label>
+                            <input type="date" class="form-control" id="startdatum" name="startdatum" required>
+                            <div class="form-text">Eerste werkdag</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="salaris" class="form-label">Jaarsalaris (€)</label>
+                            <input type="number" class="form-control" id="salaris" name="salaris" min="0" step="1000" placeholder="50000">
+                            <div class="form-text">Bruto jaarsalaris in euro's</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Initieel Wachtwoord *</label>
+                            <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                            <div class="form-text">Minimaal 6 karakters. Werknemer kan dit later wijzigen.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirmPassword" class="form-label">Bevestig Wachtwoord *</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6">
+                            <div class="form-text">Herhaal het wachtwoord ter bevestiging</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="/werknemers" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>
+                            Annuleren
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Werknemer Opslaan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Hulp & Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Verplichte Velden</h6>
+                <p class="small text-muted">Velden gemarkeerd met * zijn verplicht om in te vullen.</p>
+                
+                <h6>Email Adres</h6>
+                <p class="small text-muted">Gebruik het zakelijke email adres van de werknemer. Dit wordt gebruikt voor systeemnotificaties.</p>
+                
+                <h6>Wachtwoord</h6>
+                <p class="small text-muted">Stel een initieel wachtwoord in voor de nieuwe werknemer. De werknemer kan dit later wijzigen na het eerste inloggen.</p>
+                
+                <h6>Gebruikersrol</h6>
+                <p class="small text-muted">Nieuwe werknemers worden automatisch aangemaakt als gewone gebruikers (geen admin rechten).</p>
+                
+                <h6>Salaris</h6>
+                <p class="small text-muted">Het salaris is optioneel en wordt alleen gebruikt voor interne administratie.</p>
+            </div>
+        </div>
+
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-user-tag me-2"></i>
+                    Beschikbare Rollen
+                </h6>
+            </div>
+            <div class="card-body">
+                <% roles.forEach(role => { %>
+                    <div class="mb-2">
+                        <strong><%= role.naam %></strong>
+                        <p class="small text-muted mb-1"><%= role.beschrijving %></p>
+                        <div class="mb-2">
+                            <% role.machtigingen.forEach(permission => { %>
+                                <span class="badge bg-light text-dark me-1"><%= permission %></span>
+                            <% }); %>
+                        </div>
+                    </div>
+                    <% if (roles.indexOf(role) < roles.length - 1) { %>
+                        <hr>
+                    <% } %>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set default date to today
+document.getElementById('startdatum').valueAsDate = new Date();
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = ['naam', 'email', 'functie', 'afdeling', 'startdatum', 'password', 'confirmPassword'];
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        const input = document.getElementById(field);
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            input.classList.remove('is-invalid');
+        }
+    });
+    
+    // Password validation
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (password.length < 6) {
+        document.getElementById('password').classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    if (password !== confirmPassword) {
+        document.getElementById('confirmPassword').classList.add('is-invalid');
+        alert('Wachtwoorden komen niet overeen.');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        e.preventDefault();
+        if (password === confirmPassword && password.length >= 6) {
+            alert('Vul alle verplichte velden in.');
+        }
+    }
+});
+</script>

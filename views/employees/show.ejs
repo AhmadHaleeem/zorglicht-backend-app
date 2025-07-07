@@ -1,0 +1,245 @@
+<% layout('layout') -%>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Werknemer Details</h2>
+    <div>
+        <a href="/werknemers" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-2"></i>
+            Terug naar Werknemers
+        </a>
+        <% if (user.rol === 'admin') { %>
+        <a href="/werknemers/<%= employee.id %>/bewerken" class="btn btn-warning">
+            <i class="fas fa-edit me-2"></i>
+            Bewerken
+        </a>
+        <% } %>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-user me-2"></i>
+                    Persoonlijke Informatie
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Volledige Naam</label>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar me-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 20px;">
+                                    <%= employee.naam.charAt(0).toUpperCase() %>
+                                </div>
+                            </div>
+                            <h4 class="mb-0"><%= employee.naam %></h4>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Email Adres</label>
+                        <div>
+                            <a href="mailto:<%= employee.email %>" class="text-decoration-none">
+                                <i class="fas fa-envelope me-2"></i>
+                                <%= employee.email %>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Telefoonnummer</label>
+                        <div>
+                            <% if (employee.telefoon) { %>
+                                <a href="tel:<%= employee.telefoon %>" class="text-decoration-none">
+                                    <i class="fas fa-phone me-2"></i>
+                                    <%= employee.telefoon %>
+                                </a>
+                            <% } else { %>
+                                <span class="text-muted">Niet opgegeven</span>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Startdatum</label>
+                        <div>
+                            <i class="fas fa-calendar me-2"></i>
+                            <%= new Date(employee.startdatum).toLocaleDateString('nl-NL', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            }) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-briefcase me-2"></i>
+                    Functie Informatie
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Functietitel</label>
+                        <div>
+                            <h5 class="mb-0"><%= employee.functie %></h5>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Afdeling</label>
+                        <div>
+                            <span class="badge bg-info fs-6"><%= employee.afdeling %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Rol</label>
+                        <div>
+                            <span class="badge bg-secondary fs-6"><%= employee.rol %></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted">Jaarsalaris</label>
+                        <div>
+                            <% if (employee.salaris) { %>
+                                <h5 class="mb-0 text-success">€<%= employee.salaris.toLocaleString('nl-NL') %></h5>
+                            <% } else { %>
+                                <span class="text-muted">Niet opgegeven</span>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <% if (user.rol === 'admin') { %>
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fas fa-cogs me-2"></i>
+                    Acties
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/werknemers/<%= employee.id %>/bewerken" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>
+                        Bewerken
+                    </a>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash me-2"></i>
+                        Verwijderen
+                    </button>
+                    <hr>
+                    <a href="mailto:<%= employee.email %>" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>
+                        Email Versturen
+                    </a>
+                    <% if (employee.telefoon) { %>
+                        <a href="tel:<%= employee.telefoon %>" class="btn btn-outline-success">
+                            <i class="fas fa-phone me-2"></i>
+                            Bellen
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Statistieken
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">Dienstverband</label>
+                    <div>
+                        <% 
+                            const startDate = new Date(employee.startdatum);
+                            const today = new Date();
+                            const diffTime = Math.abs(today - startDate);
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            const years = Math.floor(diffDays / 365);
+                            const months = Math.floor((diffDays % 365) / 30);
+                        %>
+                        <strong>
+                            <% if (years > 0) { %>
+                                <%= years %> jaar
+                                <% if (months > 0) { %>
+                                    en <%= months %> maanden
+                                <% } %>
+                            <% } else if (months > 0) { %>
+                                <%= months %> maanden
+                            <% } else { %>
+                                <%= diffDays %> dagen
+                            <% } %>
+                        </strong>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Status</label>
+                    <div>
+                        <span class="badge bg-success">Actief</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Laatst Bijgewerkt</label>
+                    <div class="small text-muted">
+                        <%= new Date().toLocaleDateString('nl-NL') %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<% if (user.rol === 'admin') { %>
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Werknemer Verwijderen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Weet je zeker dat je <strong><%= employee.naam %></strong> wilt verwijderen?</p>
+                <p class="text-muted">Deze actie kan niet ongedaan worden gemaakt.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                <form action="/werknemers/<%= employee.id %>" method="POST" style="display: inline;" onsubmit="console.log('🚀 Form submitted!', this.action, this.method); return true;">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-danger" onclick="console.log('🔥 Delete button clicked!')">
+                        <i class="fas fa-trash me-2"></i>
+                        Verwijderen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+<% } %>

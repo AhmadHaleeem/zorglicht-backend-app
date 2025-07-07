@@ -1,0 +1,101 @@
+<% layout('layout') -%>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Werknemers Beheer</h2>
+    <% if (user.rol === 'admin') { %>
+    <a href="/werknemers/nieuw" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-2"></i>
+        Nieuwe Werknemer
+    </a>
+    <% } %>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-people me-2"></i>
+            Alle Werknemers (<%= employees.length %>)
+        </h6>
+    </div>
+    <div class="card-body">
+        <% if (employees.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Naam</th>
+                            <th>Email</th>
+                            <th>Telefoon</th>
+                            <th>Functie</th>
+                            <th>Afdeling</th>
+                            <th>Startdatum</th>
+                            <th>Salaris</th>
+                            <th>Rol</th>
+                            <th>Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% employees.forEach(employee => { %>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-3">
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; font-size: 14px;">
+                                                <%= employee.naam.charAt(0).toUpperCase() %>
+                                            </div>
+                                        </div>
+                                        <strong><%= employee.naam %></strong>
+                                    </div>
+                                </td>
+                                <td><%= employee.email %></td>
+                                <td><%= employee.telefoon %></td>
+                                <td><%= employee.functie %></td>
+                                <td>
+                                    <span class="badge bg-info"><%= employee.afdeling %></span>
+                                </td>
+                                <td><%= new Date(employee.startdatum).toLocaleDateString('nl-NL') %></td>
+                                <td>€<%= employee.salaris.toLocaleString('nl-NL') %></td>
+                                <td>
+                                    <span class="badge bg-secondary"><%= employee.rol %></span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="/werknemers/<%= employee.id %>" class="btn btn-sm btn-outline-info" title="Bekijken">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <% if (user.rol === 'admin') { %>
+                                        <a href="/werknemers/<%= employee.id %>/bewerken" class="btn btn-sm btn-outline-warning" title="Bewerken">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Verwijderen" 
+                                                data-action="delete"
+                                                data-type="Werknemer"
+                                                data-name="<%= employee.naam %>"
+                                                data-url="/werknemers/<%= employee.id %>?_method=DELETE">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="text-center py-5">
+                <i class="bi bi-people text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5 class="text-muted">Geen werknemers gevonden</h5>
+                <% if (user.rol === 'admin') { %>
+                <p class="text-muted">Begin met het toevoegen van je eerste werknemer.</p>
+                <a href="/werknemers/nieuw" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-2"></i>
+                    Eerste Werknemer Toevoegen
+                </a>
+                <% } else { %>
+                <p class="text-muted">Er zijn momenteel geen werknemers beschikbaar om te bekijken.</p>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>

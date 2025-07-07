@@ -1,0 +1,7 @@
+Server draait op http://localhost:3000
+Mongoose connected to MongoDB
+MongoDB Connected: ac-0opx8x6-shard-00-00.jteqcot.mongodb.net
+Database configuration loaded
+Cleared existing employees to fix rol field format
+Default employees created
+Seed data initialization completed
