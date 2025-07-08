@@ -32,20 +32,20 @@
                                     </button>
                                     <ul class="dropdown-menu">
                                         <li>
-                                            <a class="dropdown-item" href="/rollen/<%= role.id %>">
+                                            <a class="dropdown-item" href="/rollen/<%= role._id %>">
                                                 <i class="fas fa-eye me-2"></i>
                                                 Bekijken
                                             </a>
                                         </li>
                                         <li>
-                                            <a class="dropdown-item" href="/rollen/<%= role.id %>/bewerken">
+                                            <a class="dropdown-item" href="/rollen/<%= role._id %>/bewerken">
                                                 <i class="fas fa-edit me-2"></i>
                                                 Bewerken
                                             </a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <button class="dropdown-item text-danger" onclick="confirmDelete('<%= role.id %>', '<%= role.naam %>')">
+                                            <button class="dropdown-item text-danger" onclick="confirmDelete('<%= role._id %>', '<%= role.naam %>')">
                                                 <i class="fas fa-trash me-2"></i>
                                                 Verwijderen
                                             </button>
@@ -54,31 +54,26 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <p class="text-muted mb-3"><%= role.beschrijving %></p>
-                                
-                                <h6 class="mb-2">Machtigingen:</h6>
-                                <div class="mb-3">
-                                    <% role.machtigingen.forEach(permission => { %>
-                                        <span class="badge bg-light text-dark me-1 mb-1">
-                                            <i class="fas fa-check-circle me-1 text-success"></i>
-                                            <%= permission %>
-                                        </span>
-                                    <% }); %>
-                                </div>
+                                <% if (role.beschrijving) { %>
+                                    <p class="text-muted mb-3"><%= role.beschrijving %></p>
+                                <% } else { %>
+                                    <p class="text-muted mb-3 fst-italic">Geen beschrijving opgegeven</p>
+                                <% } %>
                                 
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">
-                                        <%= role.machtigingen.length %> machtiging<%= role.machtigingen.length !== 1 ? 'en' : '' %>
+                                        <i class="fas fa-calendar-plus me-1"></i>
+                                        Aangemaakt: <%= new Date(role.createdAt).toLocaleDateString('nl-NL') %>
                                     </small>
                                     <div class="btn-group" role="group">
-                                        <a href="/rollen/<%= role.id %>" class="btn btn-sm btn-outline-info" title="Bekijken">
+                                        <a href="/rollen/<%= role._id %>" class="btn btn-sm btn-outline-info" title="Bekijken">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="/rollen/<%= role.id %>/bewerken" class="btn btn-sm btn-outline-warning" title="Bewerken">
+                                        <a href="/rollen/<%= role._id %>/bewerken" class="btn btn-sm btn-outline-warning" title="Bewerken">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button type="button" class="btn btn-sm btn-outline-danger" title="Verwijderen" 
-                                                onclick="confirmDelete('<%= role.id %>', '<%= role.naam %>')">
+                                                onclick="confirmDelete('<%= role._id %>', '<%= role.naam %>')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </div>
@@ -115,39 +110,30 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-4 text-center">
                             <div class="mb-2">
                                 <i class="fas fa-user-tag fa-2x text-primary"></i>
                             </div>
                             <h4 class="mb-0"><%= roles.length %></h4>
                             <small class="text-muted">Totaal Rollen</small>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-4 text-center">
                             <div class="mb-2">
-                                <i class="fas fa-key fa-2x text-success"></i>
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
                             </div>
                             <h4 class="mb-0">
-                                <%= roles.reduce((total, role) => total + role.machtigingen.length, 0) %>
+                                <%= roles.filter(role => role.isActive).length %>
                             </h4>
-                            <small class="text-muted">Totaal Machtigingen</small>
+                            <small class="text-muted">Actieve Rollen</small>
                         </div>
-                        <div class="col-md-3 text-center">
+                        <div class="col-md-4 text-center">
                             <div class="mb-2">
-                                <i class="fas fa-crown fa-2x text-warning"></i>
+                                <i class="fas fa-file-alt fa-2x text-info"></i>
                             </div>
                             <h4 class="mb-0">
-                                <%= roles.filter(role => role.machtigingen.includes('admin')).length %>
+                                <%= roles.filter(role => role.beschrijving && role.beschrijving.trim() !== '').length %>
                             </h4>
-                            <small class="text-muted">Admin Rollen</small>
-                        </div>
-                        <div class="col-md-3 text-center">
-                            <div class="mb-2">
-                                <i class="fas fa-users fa-2x text-info"></i>
-                            </div>
-                            <h4 class="mb-0">
-                                <%= roles.filter(role => role.machtigingen.includes('team_management')).length %>
-                            </h4>
-                            <small class="text-muted">Management Rollen</small>
+                            <small class="text-muted">Met Beschrijving</small>
                         </div>
                     </div>
                 </div>

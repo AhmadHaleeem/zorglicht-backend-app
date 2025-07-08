@@ -23,15 +23,10 @@ const employeeSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    afdeling: {
-        type: String,
-        required: true,
-        trim: true
-    },
     rol: {
-        type: String,
-        enum: ['admin', 'user'],
-        default: 'user'
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Role',
+        required: true
     },
     startdatum: {
         type: Date,

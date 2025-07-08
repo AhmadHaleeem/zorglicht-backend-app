@@ -1,5 +1,21 @@
 <% layout('layout') -%>
 
+<%
+// Helper function to get role name from user object
+function getUserRoleName(user) {
+    if (!user || !user.rol) return null;
+    // If rol is an object (populated), return the naam property
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    // If rol is a string (fallback data), return it directly
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
+%>
+
 <!-- Welcome Section -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -20,6 +36,7 @@
 </div>
 
 <!-- Statistics Cards -->
+<% if (getUserRoleName(user) === 'admin') { %>
 <div class="row mb-4">
     <!-- Total Employees Card -->
     <div class="col-xl-3 col-md-6 mb-4">
@@ -84,30 +101,99 @@
         </div>
     </div>
 
-    <!-- New This Month Card -->
+    <!-- Leave Requests Card -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-warning shadow h-100 py-2">
             <div class="card-body">
                 <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                         <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Nieuw Deze Maand
+                            Verlofaanvragen
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            <%= stats && stats.newThisMonth ? stats.newThisMonth : 0 %>
+                            <%= stats && stats.pendingLeaveRequests ? stats.pendingLeaveRequests : 0 %>
                         </div>
+                        <small class="text-muted">In behandeling</small>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-calendar-plus fa-2x text-gray-300"></i>
+                        <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<% } else { %>
+<!-- User-specific Statistics Cards -->
+<div class="row mb-4">
+    <!-- My Files Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Mijn Bestanden
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <%= stats && stats.userFiles ? stats.userFiles : 0 %>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Profile Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Mijn Rol
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <%= getUserRoleName(user) || 'Gebruiker' %>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Leave Requests Card -->
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Mijn Verlofaanvragen
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <%= stats && stats.userLeaveRequests ? stats.userLeaveRequests : 0 %>
+                        </div>
+                        <small class="text-muted">Totaal aanvragen</small>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<% } %>
 
 <!-- Quick Actions Section -->
-<% if (user.rol === 'admin') { %>
+<% if (getUserRoleName(user) === 'admin') { %>
 <div class="row mb-4">
     <div class="col-12">
         <div class="card shadow">
@@ -138,9 +224,9 @@
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <a href="/werknemers/nieuw" class="btn btn-success btn-lg w-100">
-                            <i class="fas fa-user-plus mb-2 d-block"></i>
-                            Nieuwe Werknemer
+                        <a href="/verlofaanvragen" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-calendar-check mb-2 d-block"></i>
+                            Verlof Beheer
                         </a>
                     </div>
                 </div>
@@ -160,26 +246,31 @@
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <a href="/werknemers/<%= user._id %>" class="btn btn-primary btn-lg w-100">
                             <i class="fas fa-user mb-2 d-block"></i>
                             Mijn Profiel
                         </a>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <a href="/bestanden" class="btn btn-info btn-lg w-100">
                             <i class="fas fa-file-alt mb-2 d-block"></i>
                             Mijn Bestanden
                         </a>
                     </div>
-                    <% if (user.rol === 'admin') { %>
-                    <div class="col-md-4 mb-3">
-                        <a href="/bestanden/uploaden" class="btn btn-success btn-lg w-100">
-                            <i class="fas fa-upload mb-2 d-block"></i>
-                            Upload Bestand
+                    <div class="col-md-3 mb-3">
+                        <a href="/verlofaanvragen" class="btn btn-warning btn-lg w-100">
+                            <i class="fas fa-calendar-alt mb-2 d-block"></i>
+                            Mijn Verlof
                         </a>
                     </div>
-                    <% } %>
+                    <div class="col-md-3 mb-3">
+                        <a href="/verlofaanvragen/nieuw" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-calendar-plus mb-2 d-block"></i>
+                            Nieuw Verlof
+                        </a>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -189,7 +280,7 @@
 
 <!-- Content Row -->
 <div class="row">
-    <% if (user.rol === 'admin') { %>
+    <% if (getUserRoleName(user) === 'admin') { %>
     <!-- Recent Employees (Admin Only) -->
     <div class="col-lg-6 mb-4">
         <div class="card shadow mb-4">
@@ -215,7 +306,7 @@
                                 </div>
                                 <div>
                                     <h6 class="mb-0"><%= employee.naam || 'Onbekend' %></h6>
-                                    <small class="text-muted"><%= employee.functie || 'Geen functie' %> - <%= employee.afdeling || 'Geen afdeling' %></small>
+                                    <small class="text-muted"><%= employee.functie || 'Geen functie' %></small>
                                 </div>
                             </div>
                             <div>
@@ -236,25 +327,26 @@
     </div>
     <% } %>
 
-    <!-- Department Statistics -->
-    <div class="<%= user.rol === 'admin' ? 'col-lg-6' : 'col-lg-8' %> mb-4">
+    <% if (getUserRoleName(user) === 'admin') { %>
+    <!-- Role Statistics -->
+    <div class="col-lg-6 mb-4">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
                     <i class="fas fa-chart-pie me-2"></i>
-                    Afdeling Statistieken
+                    Rol Statistieken
                 </h6>
             </div>
             <div class="card-body">
-                <% if (stats && stats.departmentStats && Object.keys(stats.departmentStats).length > 0) { %>
+                <% if (stats && stats.roleStats && Object.keys(stats.roleStats).length > 0) { %>
                     <% 
-                        const totalEmployeesInDepts = Object.values(stats.departmentStats).reduce((sum, count) => sum + count, 0);
+                        const totalEmployeesInRoles = Object.values(stats.roleStats).reduce((sum, count) => sum + count, 0);
                     %>
-                    <% Object.entries(stats.departmentStats).forEach(function([department, count]) { %>
-                        <% const percentage = totalEmployeesInDepts > 0 ? Math.round((count / totalEmployeesInDepts) * 100) : 0; %>
+                    <% Object.entries(stats.roleStats).forEach(function([role, count]) { %>
+                        <% const percentage = totalEmployeesInRoles > 0 ? Math.round((count / totalEmployeesInRoles) * 100) : 0; %>
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="font-weight-bold"><%= department || 'Onbekende Afdeling' %></span>
+                                <span class="font-weight-bold"><%= role || 'Onbekende Rol' %></span>
                                 <span class="text-muted"><%= count %> werknemers (<%= percentage %>%)</span>
                             </div>
                             <div class="progress" style="height: 8px;">
@@ -265,15 +357,16 @@
                 <% } else { %>
                     <p class="text-muted mb-0">
                         <i class="fas fa-info-circle me-2"></i>
-                        Geen afdelingstatistieken beschikbaar.
+                        Geen rolstatistieken beschikbaar.
                     </p>
                 <% } %>
             </div>
         </div>
     </div>
+    <% } %>
 
     <!-- File Statistics -->
-    <div class="<%= user.rol === 'admin' ? 'col-lg-12' : 'col-lg-4' %> mb-4">
+    <div class="<%= getUserRoleName(user) === 'admin' ? 'col-lg-6' : 'col-lg-12' %> mb-4">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">
@@ -303,7 +396,7 @@
                         <i class="fas fa-folder-open me-1"></i>
                         Bekijk Bestanden
                     </a>
-                    <% if (user.rol === 'admin') { %>
+                    <% if (getUserRoleName(user) === 'admin') { %>
                     <a href="/bestanden/uploaden" class="btn btn-outline-success btn-sm">
                         <i class="fas fa-upload me-1"></i>
                         Upload Nieuw
@@ -327,6 +420,7 @@
             </div>
             <div class="card-body">
                 <div class="row">
+                    <% if (getUserRoleName(user) === 'admin') { %>
                     <div class="col-md-3 mb-3">
                         <div class="text-center">
                             <i class="fas fa-server fa-2x text-primary mb-2"></i>
@@ -345,8 +439,8 @@
                         <div class="text-center">
                             <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
                             <h6>Jouw Rol</h6>
-                            <span class="badge <%= user.rol === 'admin' ? 'bg-danger' : 'bg-primary' %>">
-                                <%= user.rol === 'admin' ? 'Administrator' : 'Gebruiker' %>
+                            <span class="badge bg-danger">
+                                Administrator
                             </span>
                         </div>
                     </div>
@@ -357,6 +451,24 @@
                             <small class="text-muted">Nu</small>
                         </div>
                     </div>
+                    <% } else { %>
+                    <div class="col-md-6 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-2x text-primary mb-2"></i>
+                            <h6>Jouw Rol</h6>
+                            <span class="badge bg-primary">
+                                <%= getUserRoleName(user) || 'Gebruiker' %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-clock fa-2x text-secondary mb-2"></i>
+                            <h6>Laatste Login</h6>
+                            <small class="text-muted">Nu</small>
+                        </div>
+                    </div>
+                    <% } %>
                 </div>
             </div>
         </div>

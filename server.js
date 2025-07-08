@@ -14,72 +14,103 @@ require('dotenv').config();
 // Database imports
 const connectDB = require('./config/database');
 const Employee = require('./models/Employee');
-const File = require('./models/File');
 const Role = require('./models/Role');
+const File = require('./models/File');
+const LeaveRequest = require('./models/LeaveRequest');
 
 // Import middleware
 const { requireAuth, requireAdmin, requireAdminOrSelf, redirectIfAuthenticated, hashPassword, comparePassword, generateRandomPassword, addUserToViews } = require('./middleware/auth');
+
+// Helper function to get role name from user object (same as in auth.js)
+function getUserRole(user) {
+    if (!user || !user.rol) return null;
+    // If rol is an object (populated), return the naam property
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    // If rol is a string (fallback data), return it directly
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
 const { upload, uploadToCloudinaryFromFile, deleteFromCloudinaryByPublicId, generateCloudinaryDownloadUrl, handleUploadError, getFileIcon, formatFileSize } = require('./middleware/upload');
 
 // Initialize seed data for development
 async function initializeSeedData() {
     try {
-        // Check if roles exist, if not create them
-        const roleCount = await Role.countDocuments();
-        if (roleCount === 0) {
-            const defaultRoles = [
-                {
-                    naam: 'admin',
-                    beschrijving: 'Administrator role with full access',
-                    machtigingen: ['create', 'read', 'update', 'delete', 'admin'],
-                    actief: true
-                },
-                {
-                    naam: 'user',
-                    beschrijving: 'Standard user role',
-                    machtigingen: ['read', 'update'],
-                    actief: true
-                }
-            ];
-            await Role.insertMany(defaultRoles);
-            console.log('Default roles created');
+        // Ensure required roles exist
+        const adminRoleExists = await Role.findOne({ naam: 'admin' });
+        const userRoleExists = await Role.findOne({ naam: 'user' });
+        
+        const rolesToCreate = [];
+        if (!adminRoleExists) {
+            rolesToCreate.push({
+                naam: 'admin',
+                beschrijving: 'Administrator role with full access'
+            });
+        }
+        if (!userRoleExists) {
+            rolesToCreate.push({
+                naam: 'user',
+                beschrijving: 'Standard user role'
+            });
+        }
+        
+        if (rolesToCreate.length > 0) {
+            await Role.insertMany(rolesToCreate);
+            console.log(`Created ${rolesToCreate.length} missing roles:`, rolesToCreate.map(r => r.naam));
         }
 
-        // Clear existing employees with invalid rol format and recreate
-        await Employee.deleteMany({});
-        console.log('Cleared existing employees to fix rol field format');
+        // Check if default employees exist
+        const adminExists = await Employee.findOne({ email: 'admin@example.com' });
+        const userExists = await Employee.findOne({ email: 'user@example.com' });
         
-        // Create sample data
-        const employeeCount = await Employee.countDocuments();
-        if (employeeCount === 0) {
-            const defaultEmployees = [
-                {
+        if (!adminExists || !userExists) {
+            // Get role ObjectIds
+            const adminRole = await Role.findOne({ naam: 'admin' });
+            const userRole = await Role.findOne({ naam: 'user' });
+            
+            // Check if roles were found
+            if (!adminRole || !userRole) {
+                console.error('Required roles not found. Admin role:', adminRole, 'User role:', userRole);
+                throw new Error('Required roles (admin/user) not found in database');
+            }
+            
+            const employeesToCreate = [];
+            
+            if (!adminExists) {
+                employeesToCreate.push({
                     naam: 'Admin User',
                     email: 'admin@example.com',
                     telefoon: '06-12345678',
                     functie: 'Administrator',
-                    afdeling: 'IT',
-                    rol: 'admin',
-                    startdatum: new Date('2020-01-15'),
+                    rol: adminRole._id,
                     salaris: 75000,
                     password: await bcrypt.hash('admin123', 10),
                     isActive: true
-                },
-                {
+                });
+            }
+            
+            if (!userExists) {
+                employeesToCreate.push({
                     naam: 'Test User',
                     email: 'user@example.com',
                     telefoon: '06-87654321',
                     functie: 'Employee',
-                    afdeling: 'General',
-                    rol: 'user',
-                    startdatum: new Date('2021-01-15'),
+                    rol: userRole._id,
                     salaris: 45000,
                     password: await bcrypt.hash('user123', 10),
                     isActive: true
-                }
-            ];
-            await Employee.insertMany(defaultEmployees);
-            console.log('Default employees created');
+                });
+            }
+            
+            if (employeesToCreate.length > 0) {
+                await Employee.insertMany(employeesToCreate);
+                console.log(`Created ${employeesToCreate.length} missing default employees`);
+            }
+        } else {
+            console.log('Default employees already exist, skipping creation');
         }
 
         console.log('Seed data initialization completed');
@@ -113,16 +144,12 @@ function initializeFallbackData() {
         {
             _id: '1',
             naam: 'admin',
-            beschrijving: 'Administrator role with full access',
-            machtigingen: ['create', 'read', 'update', 'delete', 'admin'],
-            actief: true
+            beschrijving: 'Administrator role with full access'
         },
         {
             _id: '2',
             naam: 'user',
-            beschrijving: 'Standard user role',
-            machtigingen: ['read', 'update'],
-            actief: true
+            beschrijving: 'Standard user role'
         }
     ];
     
@@ -134,9 +161,7 @@ function initializeFallbackData() {
             email: 'admin@example.com',
             telefoon: '06-12345678',
             functie: 'Administrator',
-            afdeling: 'IT',
             rol: 'admin',
-            startdatum: new Date('2020-01-15'),
             salaris: 75000,
             password: '$2a$10$LTzfeNuSvcyAWK0yPYBRMeJu2sLYOcasuCuOw9VbHHGqi4S/9nsWG', // admin123
             isActive: true,
@@ -148,9 +173,7 @@ function initializeFallbackData() {
             email: 'user@example.com',
             telefoon: '06-87654321',
             functie: 'Employee',
-            afdeling: 'General',
             rol: 'user',
-            startdatum: new Date('2021-01-15'),
             salaris: 45000,
             password: '$2a$10$NRgBuLmeJkOWNNaHPGWwpekzfE27xPOoMpyN25IndRVvV/7Ie28PG', // user123
             isActive: true,
@@ -258,7 +281,7 @@ passport.deserializeUser(async (id, done) => {
     try {
         let user;
         try {
-            user = await Employee.findById(id);
+            user = await Employee.findById(id).populate('rol');
         } catch (dbError) {
             console.log('MongoDB not available, using in-memory data for user deserialization');
             // Fall back to in-memory data
@@ -333,7 +356,7 @@ app.get('/', requireAuth, (req, res) => {
 
 app.get('/dashboard', requireAuth, async (req, res) => {
     try {
-        let totalEmployees, totalRoles, totalFiles, departments, newThisMonth, recentEmployees, departmentStats, userFiles;
+        let totalEmployees, totalRoles, totalFiles, newThisMonth, recentEmployees, roleStats, userFiles, pendingLeaveRequests, userLeaveRequests;
         
         try {
             // Try MongoDB first
@@ -341,22 +364,24 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             totalRoles = await Role.countDocuments();
             totalFiles = await File.countDocuments();
 
-            // Get departments count
-            const departmentAggregation = await Employee.aggregate([
-                { $group: { _id: '$afdeling' } },
-                { $count: 'departments' }
-            ]);
-            departments = departmentAggregation.length > 0 ? departmentAggregation[0].departments : 0;
+            // Get leave request statistics
+            if (getUserRole(req.user) === 'admin') {
+                // For admins: count pending leave requests
+                pendingLeaveRequests = await LeaveRequest.countDocuments({ status: 'in behandeling' });
+            } else {
+                // For regular users: count their total leave requests
+                userLeaveRequests = await LeaveRequest.countDocuments({ employee: req.user._id });
+            }
             
-            // Get new employees this month
+            // Get new employees this month (based on creation date)
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             newThisMonth = await Employee.countDocuments({
-                startdatum: { $gte: startOfMonth }
+                createdAt: { $gte: startOfMonth }
             });
             
             // Get recent employees (only for admin users)
-            if (req.user.rol === 'admin') {
+            if (getUserRole(req.user) === 'admin') {
                 recentEmployees = await Employee.find()
                     .populate('rol')
                     .sort({ createdAt: -1 })
@@ -365,12 +390,14 @@ app.get('/dashboard', requireAuth, async (req, res) => {
                 recentEmployees = [];
             }
             
-            // Get department stats
-            const departmentStatsAgg = await Employee.aggregate([
-                { $group: { _id: '$afdeling', count: { $sum: 1 } } }
+            // Get role stats
+            const roleStatsAgg = await Employee.aggregate([
+                { $lookup: { from: 'roles', localField: 'rol', foreignField: '_id', as: 'roleInfo' } },
+                { $unwind: '$roleInfo' },
+                { $group: { _id: '$roleInfo.naam', count: { $sum: 1 } } }
             ]);
-            departmentStats = departmentStatsAgg.reduce((acc, dept) => {
-                acc[dept._id] = dept.count;
+            roleStats = roleStatsAgg.reduce((acc, role) => {
+                acc[role._id] = role.count;
                 return acc;
             }, {});
             
@@ -383,19 +410,22 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             totalRoles = roles.length;
             totalFiles = bestanden.length;
             
-            // Get unique departments
-            const uniqueDepts = [...new Set(werknemers.map(emp => emp.afdeling))];
-            departments = uniqueDepts.length;
+            // Get leave request statistics (fallback - set to 0 since no in-memory leave data)
+            if (getUserRole(req.user) === 'admin') {
+                pendingLeaveRequests = 0;
+            } else {
+                userLeaveRequests = 0;
+            }
             
-            // Get new employees this month
+            // Get new employees this month (based on creation date)
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             newThisMonth = werknemers.filter(emp => 
-                new Date(emp.startdatum) >= startOfMonth
+                new Date(emp.createdAt) >= startOfMonth
             ).length;
             
             // Get recent employees with string roles (only for admin users)
-            if (req.user.rol === 'admin') {
+            if (getUserRole(req.user) === 'admin') {
                 recentEmployees = werknemers
                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                     .slice(0, 3)
@@ -408,9 +438,10 @@ app.get('/dashboard', requireAuth, async (req, res) => {
                 recentEmployees = [];
             }
             
-            // Get department stats
-            departmentStats = werknemers.reduce((acc, emp) => {
-                acc[emp.afdeling] = (acc[emp.afdeling] || 0) + 1;
+            // Get role stats (fallback to in-memory data)
+            roleStats = werknemers.reduce((acc, emp) => {
+                const roleName = emp.rol || 'Onbekende Rol';
+                acc[roleName] = (acc[roleName] || 0) + 1;
                 return acc;
             }, {});
             
@@ -423,12 +454,13 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             stats: {
                 totalEmployees,
                 totalRoles,
-                departments,
                 newThisMonth,
                 recentEmployees,
-                departmentStats,
+                roleStats,
                 userFiles,
-                totalFiles
+                totalFiles,
+                pendingLeaveRequests,
+                userLeaveRequests
             },
             title: 'Dashboard'
         });
@@ -454,14 +486,13 @@ app.get('/werknemers', requireAuth, async (req, res) => {
                 $or: [
                     { naam: { $regex: search, $options: 'i' } },
                     { email: { $regex: search, $options: 'i' } },
-                    { afdeling: { $regex: search, $options: 'i' } },
                     { functie: { $regex: search, $options: 'i' } }
                 ]
             };
         }
         
         // If user is not admin, only show their own profile
-        if (req.user.rol !== 'admin') {
+        if (getUserRole(req.user) !== 'admin') {
             searchQuery._id = req.user._id;
         }
         
@@ -475,6 +506,7 @@ app.get('/werknemers', requireAuth, async (req, res) => {
         
         // Get paginated employees
         const employees = await Employee.find(searchQuery)
+            .populate('rol')
             .sort(sortObj)
             .skip((page - 1) * limit)
             .limit(limit);
@@ -483,8 +515,8 @@ app.get('/werknemers', requireAuth, async (req, res) => {
             user: req.user,
             employees: employees,
             title: 'Werknemers',
-            canAdd: req.user.rol === 'admin',
-            canManage: req.user.rol === 'admin',
+            canAdd: getUserRole(req.user) === 'admin',
+            canManage: getUserRole(req.user) === 'admin',
             search: search,
             sortBy: sortBy,
             sortOrder: sortOrder,
@@ -501,7 +533,7 @@ app.get('/werknemers', requireAuth, async (req, res) => {
 
 app.get('/werknemers/nieuw', requireAdmin, async (req, res) => {
     try {
-        const roles = await Role.find({ isActive: true });
+        const roles = await Role.find({});
         res.render('employees/new', { 
             roles, 
             title: 'Nieuwe Werknemer',
@@ -518,7 +550,7 @@ app.get('/werknemers/nieuw', requireAdmin, async (req, res) => {
 app.post('/werknemers', requireAdmin, async (req, res) => {
     try {
         // Validate required fields
-        if (!req.body.naam || !req.body.email || !req.body.functie || !req.body.afdeling || !req.body.password) {
+        if (!req.body.naam || !req.body.email || !req.body.functie || !req.body.rol || !req.body.password) {
             req.flash('error', 'Alle verplichte velden moeten worden ingevuld.');
             return res.redirect('/werknemers/nieuw');
         }
@@ -539,11 +571,9 @@ app.post('/werknemers', requireAdmin, async (req, res) => {
         // Use admin-provided password (will be hashed by the model's pre-save hook)
         const userPassword = req.body.password;
         
-        // Set role as string (default to 'user' for new employees)
-        const userRole = req.body.rol || 'user';
-        
-        // Validate role
-        if (!['admin', 'user'].includes(userRole)) {
+        // Validate role exists
+        const selectedRole = await Role.findById(req.body.rol);
+        if (!selectedRole) {
             req.flash('error', 'Ongeldige rol geselecteerd.');
             return res.redirect('/werknemers/nieuw');
         }
@@ -553,8 +583,7 @@ app.post('/werknemers', requireAdmin, async (req, res) => {
             email: req.body.email,
             telefoon: req.body.telefoon || '',
             functie: req.body.functie,
-            afdeling: req.body.afdeling,
-            rol: userRole,
+            rol: req.body.rol,
             startdatum: req.body.startdatum ? new Date(req.body.startdatum) : new Date(),
             salaris: parseInt(req.body.salaris) || 0,
             password: userPassword,
@@ -565,7 +594,7 @@ app.post('/werknemers', requireAdmin, async (req, res) => {
         
         req.flash('success', `✅ Werknemer ${newEmployee.naam} is succesvol aangemaakt!<br>
                              📧 E-mail: ${newEmployee.email}<br>
-                             👤 Rol: ${newEmployee.rol}<br>
+                             👤 Rol: ${selectedRole.naam}<br>
                              💡 De werknemer kan nu inloggen met het opgegeven e-mail en wachtwoord.`);
         
         res.redirect('/werknemers');
@@ -579,13 +608,13 @@ app.post('/werknemers', requireAdmin, async (req, res) => {
 
 app.get('/werknemers/:id', requireAuth, async (req, res) => {
     try {
-        const employee = await Employee.findById(req.params.id);
+        const employee = await Employee.findById(req.params.id).populate('rol');
         if (!employee) {
             return res.status(404).render('404');
         }
         
         // Check if user can view this employee
-        if (req.user && req.user.rol !== 'admin' && req.user._id.toString() !== employee._id.toString()) {
+        if (req.user && getUserRole(req.user) !== 'admin' && req.user._id.toString() !== employee._id.toString()) {
             req.flash('error', 'Je hebt geen toegang tot deze gegevens.');
             return res.redirect('/werknemers');
         }
@@ -599,7 +628,7 @@ app.get('/werknemers/:id', requireAuth, async (req, res) => {
             employee, 
             title: employee.naam,
             files: employeeFiles,
-            canEdit: req.user ? (req.user.rol === 'admin' || req.user._id.toString() === employee._id.toString()) : true
+            canEdit: req.user ? (getUserRole(req.user) === 'admin' || req.user._id.toString() === employee._id.toString()) : true
         });
     } catch (error) {
         console.error('Error fetching employee:', error);
@@ -609,19 +638,19 @@ app.get('/werknemers/:id', requireAuth, async (req, res) => {
 
 app.get('/werknemers/:id/bewerken', requireAdminOrSelf, async (req, res) => {
     try {
-        const employee = await Employee.findById(req.params.id);
+        const employee = await Employee.findById(req.params.id).populate('rol');
         if (!employee) {
             return res.status(404).render('404');
         }
         
-        const roles = await Role.find({ isActive: true });
+        const roles = await Role.find({});
         
         res.render('employees/edit', { 
             employee, 
             roles, 
             title: 'Werknemer Bewerken',
             availableRoles: ['admin', 'user'],
-            canChangeRole: req.user.rol === 'admin'
+            canChangeRole: getUserRole(req.user) === 'admin'
         });
     } catch (error) {
         console.error('Error loading employee for edit:', error);
@@ -641,15 +670,14 @@ app.put('/werknemers/:id', requireAdminOrSelf, async (req, res) => {
             email: req.body.email,
             telefoon: req.body.telefoon,
             functie: req.body.functie,
-            afdeling: req.body.afdeling,
-            startdatum: req.body.startdatum ? new Date(req.body.startdatum) : employee.startdatum,
             salaris: parseInt(req.body.salaris) || employee.salaris
         };
         
         // Only admin can change role
-        if (req.user.rol === 'admin' && req.body.rol) {
-            // Validate role
-            if (['admin', 'user'].includes(req.body.rol)) {
+        if (getUserRole(req.user) === 'admin' && req.body.rol) {
+            // Validate role exists
+            const selectedRole = await Role.findById(req.body.rol);
+            if (selectedRole) {
                 updateData.rol = req.body.rol;
             }
         }
@@ -693,7 +721,7 @@ app.delete('/werknemers/:id', requireAdmin, async (req, res) => {
     console.log('🔍 Request method:', req.method);
     console.log('🔍 Request body:', req.body);
     console.log('👤 Current user:', req.user ? req.user.email : 'No user');
-    console.log('🔐 User role:', req.user ? req.user.rol : 'No role');
+    console.log('🔐 User role:', req.user ? getUserRole(req.user) : 'No role');
     
     try {
         console.log('🔍 Looking for employee with ID:', req.params.id);
@@ -754,29 +782,54 @@ app.delete('/werknemers/:id', requireAdmin, async (req, res) => {
 });
 
 // Role Routes (Admin only)
-app.get('/rollen', requireAdmin, (req, res) => {
-    res.render('roles/index', { 
-        roles, 
-        title: 'Rollen',
-        canManage: true
-    });
+app.get('/rollen', requireAdmin, async (req, res) => {
+    try {
+        const roles = await Role.find({}).sort({ naam: 1 });
+        res.render('roles/index', { 
+            roles, 
+            title: 'Rollen',
+            canManage: true
+        });
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het ophalen van rollen.');
+        res.render('roles/index', { 
+            roles: [], 
+            title: 'Rollen',
+            canManage: true
+        });
+    }
 });
 
 app.get('/rollen/nieuw', requireAdmin, (req, res) => {
     res.render('roles/new', { title: 'Nieuwe Rol' });
 });
 
-app.post('/rollen', requireAdmin, (req, res) => {
+app.post('/rollen', requireAdmin, async (req, res) => {
     try {
-        const newRole = {
-            id: uuidv4(),
-            naam: req.body.naam,
-            beschrijving: req.body.beschrijving,
-            machtigingen: Array.isArray(req.body.machtigingen) ? req.body.machtigingen : [req.body.machtigingen].filter(Boolean)
-        };
-        roles.push(newRole);
+        const { naam, beschrijving } = req.body;
         
-        req.flash('success', `Rol ${newRole.naam} is aangemaakt.`);
+        // Validate required fields
+        if (!naam || naam.trim() === '') {
+            req.flash('error', 'Rol naam is verplicht.');
+            return res.redirect('/rollen/nieuw');
+        }
+        
+        // Check if role name already exists
+        const existingRole = await Role.findOne({ naam: naam.trim() });
+        if (existingRole) {
+            req.flash('error', 'Een rol met deze naam bestaat al.');
+            return res.redirect('/rollen/nieuw');
+        }
+        
+        const newRole = new Role({
+            naam: naam.trim(),
+            beschrijving: beschrijving ? beschrijving.trim() : ''
+        });
+        
+        await newRole.save();
+        
+        req.flash('success', `Rol "${newRole.naam}" is succesvol aangemaakt.`);
         res.redirect('/rollen');
         
     } catch (error) {
@@ -786,45 +839,77 @@ app.post('/rollen', requireAdmin, (req, res) => {
     }
 });
 
-app.get('/rollen/:id', requireAdmin, (req, res) => {
-    const role = roles.find(r => r.id === req.params.id);
-    if (!role) {
-        return res.status(404).render('404');
-    }
-    res.render('roles/show', { 
-        role, 
-        title: role.naam,
-        canEdit: true
-    });
-});
-
-app.get('/rollen/:id/bewerken', requireAdmin, (req, res) => {
-    const role = roles.find(r => r.id === req.params.id);
-    if (!role) {
-        return res.status(404).render('404');
-    }
-    res.render('roles/edit', { 
-        role, 
-        title: 'Rol Bewerken'
-    });
-});
-
-app.put('/rollen/:id', requireAdmin, (req, res) => {
+app.get('/rollen/:id', requireAdmin, async (req, res) => {
     try {
-        const index = roles.findIndex(r => r.id === req.params.id);
-        if (index === -1) {
-            return res.status(404).render('404');
+        const role = await Role.findById(req.params.id);
+        if (!role) {
+            req.flash('error', 'Rol niet gevonden.');
+            return res.redirect('/rollen');
+        }
+        res.render('roles/show', { 
+            role, 
+            title: role.naam,
+            canEdit: true
+        });
+    } catch (error) {
+        console.error('Error fetching role:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het ophalen van de rol.');
+        res.redirect('/rollen');
+    }
+});
+
+app.get('/rollen/:id/bewerken', requireAdmin, async (req, res) => {
+    try {
+        const role = await Role.findById(req.params.id);
+        if (!role) {
+            req.flash('error', 'Rol niet gevonden.');
+            return res.redirect('/rollen');
+        }
+        res.render('roles/edit', { 
+            role, 
+            title: 'Rol Bewerken'
+        });
+    } catch (error) {
+        console.error('Error fetching role for edit:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het ophalen van de rol.');
+        res.redirect('/rollen');
+    }
+});
+
+app.put('/rollen/:id', requireAdmin, async (req, res) => {
+    try {
+        const { naam, beschrijving } = req.body;
+        
+        // Validate required fields
+        if (!naam || naam.trim() === '') {
+            req.flash('error', 'Rol naam is verplicht.');
+            return res.redirect(`/rollen/${req.params.id}/bewerken`);
         }
         
-        const updateData = {
-            naam: req.body.naam,
-            beschrijving: req.body.beschrijving,
-            machtigingen: Array.isArray(req.body.machtigingen) ? req.body.machtigingen : [req.body.machtigingen].filter(Boolean)
-        };
+        // Check if role exists
+        const role = await Role.findById(req.params.id);
+        if (!role) {
+            req.flash('error', 'Rol niet gevonden.');
+            return res.redirect('/rollen');
+        }
         
-        roles[index] = { ...roles[index], ...updateData };
+        // Check if another role with the same name exists (excluding current role)
+        const existingRole = await Role.findOne({ 
+            naam: naam.trim(), 
+            _id: { $ne: req.params.id }
+        });
+        if (existingRole) {
+            req.flash('error', 'Een rol met deze naam bestaat al.');
+            return res.redirect(`/rollen/${req.params.id}/bewerken`);
+        }
         
-        req.flash('success', 'Rol is bijgewerkt.');
+        // Update the role
+        role.naam = naam.trim();
+        role.beschrijving = beschrijving ? beschrijving.trim() : '';
+        
+        await role.save();
+        
+        req.flash('success', `Rol "${role.naam}" is succesvol bijgewerkt.`);
         res.redirect(`/rollen/${req.params.id}`);
         
     } catch (error) {
@@ -834,17 +919,19 @@ app.put('/rollen/:id', requireAdmin, (req, res) => {
     }
 });
 
-app.delete('/rollen/:id', requireAdmin, (req, res) => {
+app.delete('/rollen/:id', requireAdmin, async (req, res) => {
     try {
-        const index = roles.findIndex(r => r.id === req.params.id);
-        if (index === -1) {
-            return res.status(404).render('404');
+        const role = await Role.findById(req.params.id);
+        if (!role) {
+            req.flash('error', 'Rol niet gevonden.');
+            return res.redirect('/rollen');
         }
         
-        const deletedRole = roles[index];
-        roles.splice(index, 1);
+        // Permanently delete the role from database
+        const roleName = role.naam;
+        await Role.findByIdAndDelete(req.params.id);
         
-        req.flash('success', `Rol ${deletedRole.naam} is verwijderd.`);
+        req.flash('success', `Rol "${roleName}" is succesvol verwijderd.`);
         res.redirect('/rollen');
         
     } catch (error) {
@@ -862,7 +949,7 @@ app.get('/bestanden', requireAuth, async (req, res) => {
         let query = {};
         
         // If user is not admin, only show their own files
-        if (req.user.rol !== 'admin') {
+        if (getUserRole(req.user) !== 'admin') {
             query.eigenaar = req.user._id;
             console.log('👤 User files only for:', req.user._id);
         }
@@ -876,8 +963,8 @@ app.get('/bestanden', requireAuth, async (req, res) => {
         res.render('files/index', {
             files: files,
             title: 'Bestanden',
-            canUpload: req.user.rol === 'admin',
-            canManage: req.user.rol === 'admin',
+            canUpload: getUserRole(req.user) === 'admin',
+            canManage: getUserRole(req.user) === 'admin',
             getFileIcon: getFileIcon,
             formatFileSize: formatFileSize
         });
@@ -1145,7 +1232,7 @@ app.get('/bestanden/:id/download', requireAuth, async (req, res) => {
         }
         
         // Check if user can access this file
-        if (req.user.rol !== 'admin' && file.eigenaar._id.toString() !== req.user._id.toString()) {
+        if (getUserRole(req.user) !== 'admin' && file.eigenaar._id.toString() !== req.user._id.toString()) {
             req.flash('error', 'Je hebt geen toegang tot dit bestand.');
             return res.redirect('/bestanden');
         }
@@ -1193,6 +1280,148 @@ app.delete('/bestanden/:id', requireAdmin, async (req, res) => {
         console.error('Error deleting file:', error);
         req.flash('error', 'Er is een fout opgetreden bij het verwijderen.');
         res.redirect('/bestanden');
+    }
+});
+
+// Leave Request Routes
+
+// Display leave requests page for users
+app.get('/verlofaanvragen', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        let leaveRequests;
+        
+        if (userRole === 'admin') {
+            // Admin sees all leave requests
+            leaveRequests = await LeaveRequest.find()
+                .populate('employee', 'naam email functie')
+                .populate('reviewedBy', 'naam')
+                .sort({ createdAt: -1 });
+        } else {
+            // Regular users see only their own requests
+            leaveRequests = await LeaveRequest.find({ employee: req.user._id })
+                .populate('reviewedBy', 'naam')
+                .sort({ createdAt: -1 });
+        }
+        
+        res.render('leave-requests/index', {
+            title: 'Verlofaanvragen',
+            leaveRequests,
+            userRole,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Error fetching leave requests:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het ophalen van verlofaanvragen.');
+        res.redirect('/dashboard');
+    }
+});
+
+// Display new leave request form
+app.get('/verlofaanvragen/nieuw', requireAuth, (req, res) => {
+    const userRole = getUserRole(req.user);
+    if (userRole === 'admin') {
+        req.flash('info', 'Als administrator kunt u verlofaanvragen beheren, maar niet indienen.');
+        return res.redirect('/verlofaanvragen');
+    }
+    
+    res.render('leave-requests/new', {
+        title: 'Nieuwe Verlofaanvraag',
+        user: req.user
+    });
+});
+
+// Submit new leave request
+app.post('/verlofaanvragen', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        if (userRole === 'admin') {
+            req.flash('error', 'Administrators kunnen geen verlofaanvragen indienen.');
+            return res.redirect('/verlofaanvragen');
+        }
+        
+        const { startDate, endDate, reason } = req.body;
+        
+        // Validate dates
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (start < today) {
+            req.flash('error', 'Startdatum kan niet in het verleden liggen.');
+            return res.redirect('/verlofaanvragen/nieuw');
+        }
+        
+        if (end < start) {
+            req.flash('error', 'Einddatum moet na de startdatum liggen.');
+            return res.redirect('/verlofaanvragen/nieuw');
+        }
+        
+        const leaveRequest = new LeaveRequest({
+            employee: req.user._id,
+            startDate: start,
+            endDate: end,
+            reason: reason.trim()
+        });
+        
+        await leaveRequest.save();
+        
+        req.flash('success', 'Verlofaanvraag succesvol ingediend! U ontvangt bericht zodra deze is beoordeeld.');
+        res.redirect('/verlofaanvragen');
+        
+    } catch (error) {
+        console.error('Error creating leave request:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het indienen van de aanvraag.');
+        res.redirect('/verlofaanvragen/nieuw');
+    }
+});
+
+// Admin: Update leave request status
+app.put('/verlofaanvragen/:id', requireAdmin, async (req, res) => {
+    try {
+        const { status, adminResponse } = req.body;
+        
+        const leaveRequest = await LeaveRequest.findById(req.params.id);
+        if (!leaveRequest) {
+            req.flash('error', 'Verlofaanvraag niet gevonden.');
+            return res.redirect('/verlofaanvragen');
+        }
+        
+        leaveRequest.status = status;
+        leaveRequest.adminResponse = adminResponse || '';
+        leaveRequest.reviewedBy = req.user._id;
+        leaveRequest.reviewedAt = new Date();
+        
+        await leaveRequest.save();
+        
+        const statusText = status === 'goedgekeurd' ? 'goedgekeurd' : 'afgewezen';
+        req.flash('success', `Verlofaanvraag succesvol ${statusText}.`);
+        res.redirect('/verlofaanvragen');
+        
+    } catch (error) {
+        console.error('Error updating leave request:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het bijwerken van de aanvraag.');
+        res.redirect('/verlofaanvragen');
+    }
+});
+
+// Delete leave request (admin only)
+app.delete('/verlofaanvragen/:id', requireAdmin, async (req, res) => {
+    try {
+        const leaveRequest = await LeaveRequest.findByIdAndDelete(req.params.id);
+        if (!leaveRequest) {
+            req.flash('error', 'Verlofaanvraag niet gevonden.');
+            return res.redirect('/verlofaanvragen');
+        }
+        
+        req.flash('success', 'Verlofaanvraag succesvol verwijderd.');
+        res.redirect('/verlofaanvragen');
+        
+    } catch (error) {
+        console.error('Error deleting leave request:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het verwijderen van de aanvraag.');
+        res.redirect('/verlofaanvragen');
     }
 });
 

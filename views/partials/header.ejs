@@ -1,3 +1,19 @@
+<%
+// Helper function to get role name from user object
+function getUserRoleName(user) {
+    if (!user || !user.rol) return null;
+    // If rol is an object (populated), return the naam property
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    // If rol is a string (fallback data), return it directly
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
+%>
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -58,8 +74,8 @@
                             <li>
                                 <span class="dropdown-item-text">
                                     <small class="text-muted">
-                                        <i class="bi bi-shield<%= currentUser.rol === 'admin' ? '-check' : '' %> me-1 text-primary"></i>
-                                        <%= currentUser.rol === 'admin' ? 'Administrator' : 'Gebruiker' %>
+                                        <i class="bi bi-shield<%= getUserRoleName(currentUser) === 'admin' ? '-check' : '' %> me-1 text-primary"></i>
+                                <%= getUserRoleName(currentUser) === 'admin' ? 'Administrator' : 'Gebruiker' %>
                                     </small>
                                 </span>
                             </li>

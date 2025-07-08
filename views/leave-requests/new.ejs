@@ -1,0 +1,335 @@
+<% layout('layout') -%>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-plus-circle me-2"></i>
+                Nieuwe Verlofaanvraag
+            </h1>
+            <p class="text-muted mb-0">Dien een nieuwe verlofaanvraag in voor goedkeuring</p>
+        </div>
+        <div>
+            <a href="/verlofaanvragen" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Terug naar Overzicht
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Leave Request Form -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-calendar-plus me-2"></i>
+                        Verlofaanvraag Formulier
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form action="/verlofaanvragen" method="POST" id="leaveRequestForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="startDate" class="form-label">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    Startdatum *
+                                </label>
+                                <input type="date" class="form-control" id="startDate" name="startDate" required>
+                                <div class="form-text">Eerste dag van uw verlof</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="endDate" class="form-label">
+                                    <i class="bi bi-calendar-check me-1"></i>
+                                    Einddatum *
+                                </label>
+                                <input type="date" class="form-control" id="endDate" name="endDate" required>
+                                <div class="form-text">Laatste dag van uw verlof</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="totalDays" class="form-label">
+                                <i class="bi bi-clock me-1"></i>
+                                Totaal Aantal Dagen
+                            </label>
+                            <input type="text" class="form-control" id="totalDays" readonly>
+                            <div class="form-text">Wordt automatisch berekend op basis van de geselecteerde datums</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="reason" class="form-label">
+                                <i class="bi bi-chat-left-text me-1"></i>
+                                Reden voor Verlof *
+                            </label>
+                            <textarea class="form-control" id="reason" name="reason" rows="4" required 
+                                      placeholder="Beschrijf kort de reden voor uw verlofaanvraag..."
+                                      maxlength="500"></textarea>
+                            <div class="form-text">
+                                <span id="reasonCount">0</span>/500 karakters
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Let op:</strong> Uw verlofaanvraag wordt ter beoordeling voorgelegd aan de beheerder. 
+                            U ontvangt een melding zodra uw aanvraag is goedgekeurd of afgewezen.
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/verlofaanvragen" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Annuleren
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-send me-2"></i>
+                                Aanvraag Indienen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Help Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="bi bi-question-circle me-2"></i>
+                        Hulp & Richtlijnen
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">Verlofaanvraag Proces</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-1-circle text-primary me-2"></i>
+                            Vul het formulier volledig in
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-2-circle text-primary me-2"></i>
+                            Dien de aanvraag in
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-3-circle text-primary me-2"></i>
+                            Wacht op goedkeuring van beheerder
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-4-circle text-primary me-2"></i>
+                            Ontvang bevestiging
+                        </li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6 class="text-success">Tips</h6>
+                    <ul class="small text-muted">
+                        <li>Dien uw aanvraag ruim van tevoren in</li>
+                        <li>Geef een duidelijke reden op</li>
+                        <li>Controleer uw datums zorgvuldig</li>
+                        <li>Verlofaanvragen kunnen niet in het verleden liggen</li>
+                    </ul>
+                    
+                    <hr>
+                    
+                    <h6 class="text-warning">Status Betekenissen</h6>
+                    <div class="small">
+                        <div class="mb-1">
+                            <span class="badge bg-warning text-dark me-2">In Behandeling</span>
+                            Wacht op beoordeling
+                        </div>
+                        <div class="mb-1">
+                            <span class="badge bg-success me-2">Goedgekeurd</span>
+                            Verlof is toegestaan
+                        </div>
+                        <div class="mb-1">
+                            <span class="badge bg-danger me-2">Afgewezen</span>
+                            Verlof is niet toegestaan
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current User Info -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-secondary">
+                        <i class="bi bi-person me-2"></i>
+                        Uw Gegevens
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-lg bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                            <i class="bi bi-person text-white fa-lg"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold"><%= user.naam %></div>
+                            <small class="text-muted"><%= user.functie || 'Geen functie opgegeven' %></small>
+                        </div>
+                    </div>
+                    <div class="small text-muted">
+                        <div class="mb-1">
+                            <i class="bi bi-envelope me-1"></i>
+                            <%= user.email %>
+                        </div>
+                        <% if (user.telefoon) { %>
+                        <div class="mb-1">
+                            <i class="bi bi-telephone me-1"></i>
+                            <%= user.telefoon %>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const totalDaysInput = document.getElementById('totalDays');
+    const reasonTextarea = document.getElementById('reason');
+    const reasonCount = document.getElementById('reasonCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('leaveRequestForm');
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    endDateInput.min = today;
+    
+    // Calculate total days
+    function calculateTotalDays() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && endDate >= startDate) {
+            const timeDiff = endDate.getTime() - startDate.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+            totalDaysInput.value = `${daysDiff} dag${daysDiff !== 1 ? 'en' : ''}`;
+        } else {
+            totalDaysInput.value = '';
+        }
+    }
+    
+    // Update character count
+    function updateCharacterCount() {
+        const count = reasonTextarea.value.length;
+        reasonCount.textContent = count;
+        
+        if (count > 450) {
+            reasonCount.className = 'text-warning';
+        } else if (count > 480) {
+            reasonCount.className = 'text-danger';
+        } else {
+            reasonCount.className = 'text-muted';
+        }
+    }
+    
+    // Validate form
+    function validateForm() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let isValid = true;
+        let errorMessage = '';
+        
+        // Check if start date is in the past
+        if (startDate < today) {
+            isValid = false;
+            errorMessage = 'Startdatum kan niet in het verleden liggen.';
+        }
+        
+        // Check if end date is before start date
+        if (endDate < startDate) {
+            isValid = false;
+            errorMessage = 'Einddatum moet na de startdatum liggen.';
+        }
+        
+        // Check if reason is provided
+        if (!reasonTextarea.value.trim()) {
+            isValid = false;
+            errorMessage = 'Reden voor verlof is verplicht.';
+        }
+        
+        if (!isValid && errorMessage) {
+            alert(errorMessage);
+        }
+        
+        return isValid;
+    }
+    
+    // Event listeners
+    startDateInput.addEventListener('change', function() {
+        // Update minimum end date
+        endDateInput.min = this.value || today;
+        calculateTotalDays();
+    });
+    
+    endDateInput.addEventListener('change', calculateTotalDays);
+    reasonTextarea.addEventListener('input', updateCharacterCount);
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+            e.preventDefault();
+        } else {
+            // Disable submit button to prevent double submission
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Bezig met indienen...';
+        }
+    });
+    
+    // Initialize character count
+    updateCharacterCount();
+});
+</script>
+
+<style>
+.avatar-lg {
+    width: 3rem;
+    height: 3rem;
+}
+
+.form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+.btn-primary:hover {
+    background-color: #2e59d9;
+    border-color: #2653d4;
+}
+
+.card {
+    border: none;
+    border-radius: 0.35rem;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.text-primary {
+    color: #4e73df !important;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+</style>

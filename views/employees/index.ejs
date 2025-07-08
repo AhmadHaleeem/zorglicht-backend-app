@@ -1,8 +1,24 @@
 <% layout('layout') -%>
 
+<%
+// Helper function to get role name from user object
+function getUserRoleName(user) {
+    if (!user || !user.rol) return null;
+    // If rol is an object (populated), return the naam property
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    // If rol is a string (fallback data), return it directly
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
+%>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Werknemers Beheer</h2>
-    <% if (user.rol === 'admin') { %>
+    <% if (getUserRoleName(user) === 'admin') { %>
     <a href="/werknemers/nieuw" class="btn btn-primary">
         <i class="bi bi-plus-lg me-2"></i>
         Nieuwe Werknemer
@@ -27,8 +43,6 @@
                             <th>Email</th>
                             <th>Telefoon</th>
                             <th>Functie</th>
-                            <th>Afdeling</th>
-                            <th>Startdatum</th>
                             <th>Salaris</th>
                             <th>Rol</th>
                             <th>Acties</th>
@@ -50,20 +64,16 @@
                                 <td><%= employee.email %></td>
                                 <td><%= employee.telefoon %></td>
                                 <td><%= employee.functie %></td>
+                                <td>€<%= employee.salaris ? employee.salaris.toLocaleString('nl-NL') : 'Niet opgegeven' %></td>
                                 <td>
-                                    <span class="badge bg-info"><%= employee.afdeling %></span>
-                                </td>
-                                <td><%= new Date(employee.startdatum).toLocaleDateString('nl-NL') %></td>
-                                <td>€<%= employee.salaris.toLocaleString('nl-NL') %></td>
-                                <td>
-                                    <span class="badge bg-secondary"><%= employee.rol %></span>
+                                    <span class="badge bg-secondary"><%= employee.rol && employee.rol.naam ? employee.rol.naam : 'Geen rol' %></span>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="/werknemers/<%= employee.id %>" class="btn btn-sm btn-outline-info" title="Bekijken">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <% if (user.rol === 'admin') { %>
+                                        <% if (getUserRoleName(user) === 'admin') { %>
                                         <a href="/werknemers/<%= employee.id %>/bewerken" class="btn btn-sm btn-outline-warning" title="Bewerken">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -86,7 +96,7 @@
             <div class="text-center py-5">
                 <i class="bi bi-people text-muted mb-3" style="font-size: 3rem;"></i>
                 <h5 class="text-muted">Geen werknemers gevonden</h5>
-                <% if (user.rol === 'admin') { %>
+                <% if (getUserRoleName(user) === 'admin') { %>
                 <p class="text-muted">Begin met het toevoegen van je eerste werknemer.</p>
                 <a href="/werknemers/nieuw" class="btn btn-primary">
                     <i class="bi bi-plus-lg me-2"></i>

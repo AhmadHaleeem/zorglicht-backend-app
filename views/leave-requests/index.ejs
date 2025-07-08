@@ -1,0 +1,381 @@
+<% layout('layout') -%>
+
+<%
+// Helper function to get role name from user object
+function getUserRoleName(user) {
+    if (!user || !user.rol) return null;
+    // If rol is an object (populated), return the naam property
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    // If rol is a string (fallback data), return it directly
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
+
+// Helper function to format dates
+function formatDate(date) {
+    if (!date) return 'Onbekend';
+    return new Date(date).toLocaleDateString('nl-NL', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Helper function to get status badge class
+function getStatusBadgeClass(status) {
+    switch(status) {
+        case 'goedgekeurd': return 'bg-success';
+        case 'afgewezen': return 'bg-danger';
+        case 'in behandeling': return 'bg-warning text-dark';
+        default: return 'bg-secondary';
+    }
+}
+
+// Helper function to get status icon
+function getStatusIcon(status) {
+    switch(status) {
+        case 'goedgekeurd': return 'bi-check-circle';
+        case 'afgewezen': return 'bi-x-circle';
+        case 'in behandeling': return 'bi-clock';
+        default: return 'bi-question-circle';
+    }
+}
+%>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-calendar-check me-2"></i>
+                Verlofaanvragen
+            </h1>
+            <p class="text-muted mb-0">
+                <% if (userRole === 'admin') { %>
+                    Beheer alle verlofaanvragen van medewerkers
+                <% } else { %>
+                    Overzicht van uw verlofaanvragen
+                <% } %>
+            </p>
+        </div>
+        
+        <% if (userRole !== 'admin') { %>
+        <div>
+            <a href="/verlofaanvragen/nieuw" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>
+                Nieuwe Aanvraag
+            </a>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <% 
+        const totalRequests = leaveRequests.length;
+        const pendingRequests = leaveRequests.filter(req => req.status === 'in behandeling').length;
+        const approvedRequests = leaveRequests.filter(req => req.status === 'goedgekeurd').length;
+        const rejectedRequests = leaveRequests.filter(req => req.status === 'afgewezen').length;
+        %>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Totaal Aanvragen
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><%= totalRequests %></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                In Behandeling
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><%= pendingRequests %></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Goedgekeurd
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><%= approvedRequests %></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Afgewezen
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><%= rejectedRequests %></div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-x-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Requests Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="bi bi-list-ul me-2"></i>
+                <% if (userRole === 'admin') { %>
+                    Alle Verlofaanvragen
+                <% } else { %>
+                    Mijn Verlofaanvragen
+                <% } %>
+            </h6>
+        </div>
+        <div class="card-body">
+            <% if (leaveRequests.length === 0) { %>
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">
+                        <% if (userRole === 'admin') { %>
+                            Geen verlofaanvragen gevonden
+                        <% } else { %>
+                            U heeft nog geen verlofaanvragen ingediend
+                        <% } %>
+                    </h5>
+                    <% if (userRole !== 'admin') { %>
+                        <a href="/verlofaanvragen/nieuw" class="btn btn-primary mt-3">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Eerste Aanvraag Indienen
+                        </a>
+                    <% } %>
+                </div>
+            <% } else { %>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <% if (userRole === 'admin') { %>
+                                    <th>Medewerker</th>
+                                <% } %>
+                                <th>Periode</th>
+                                <th>Dagen</th>
+                                <th>Reden</th>
+                                <th>Status</th>
+                                <th>Ingediend</th>
+                                <% if (userRole === 'admin') { %>
+                                    <th>Acties</th>
+                                <% } %>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% leaveRequests.forEach(request => { %>
+                                <tr>
+                                    <% if (userRole === 'admin') { %>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                    <i class="bi bi-person text-white"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold"><%= request.employee.naam %></div>
+                                                    <small class="text-muted"><%= request.employee.functie || 'Geen functie' %></small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    <% } %>
+                                    <td>
+                                        <div class="fw-bold"><%= formatDate(request.startDate) %></div>
+                                        <small class="text-muted">tot <%= formatDate(request.endDate) %></small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info"><%= request.totalDays %> dag<%= request.totalDays !== 1 ? 'en' : '' %></span>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;" title="<%= request.reason %>">
+                                            <%= request.reason %>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge <%= getStatusBadgeClass(request.status) %>">
+                                            <i class="bi <%= getStatusIcon(request.status) %> me-1"></i>
+                                            <%= request.status.charAt(0).toUpperCase() + request.status.slice(1) %>
+                                        </span>
+                                        <% if (request.reviewedBy && request.status !== 'in behandeling') { %>
+                                            <br><small class="text-muted">door <%= request.reviewedBy.naam %></small>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted"><%= formatDate(request.createdAt) %></small>
+                                    </td>
+                                    <% if (userRole === 'admin') { %>
+                                        <td>
+                                            <% if (request.status === 'in behandeling') { %>
+                                                <div class="btn-group" role="group">
+                                                    <button type="button" class="btn btn-sm btn-success" 
+                                                            onclick="updateLeaveRequest('<%= request._id %>', 'goedgekeurd')">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger" 
+                                                            onclick="updateLeaveRequest('<%= request._id %>', 'afgewezen')">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </div>
+                                            <% } else { %>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="deleteLeaveRequest('<%= request._id %>')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            <% } %>
+                                        </td>
+                                    <% } %>
+                                </tr>
+                                
+                                <!-- Admin Response Row -->
+                                <% if (request.adminResponse && request.adminResponse.trim()) { %>
+                                    <tr class="table-light">
+                                        <td <% if (userRole === 'admin') { %>colspan="7"<% } else { %>colspan="6"<% } %>>
+                                            <div class="ps-4">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-chat-left-text me-1"></i>
+                                                    <strong>Reactie van beheerder:</strong> <%= request.adminResponse %>
+                                                </small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Action Modal -->
+<% if (userRole === 'admin') { %>
+<div class="modal fade" id="actionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="actionModalTitle">Verlofaanvraag Beoordelen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="actionForm" method="POST">
+                <input type="hidden" name="_method" value="PUT">
+                <input type="hidden" name="status" id="actionStatus">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="adminResponse" class="form-label">Reactie (optioneel)</label>
+                        <textarea class="form-control" id="adminResponse" name="adminResponse" rows="3" 
+                                  placeholder="Voeg een reactie toe voor de medewerker..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn" id="actionSubmitBtn">Bevestigen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<script>
+<% if (userRole === 'admin') { %>
+function updateLeaveRequest(requestId, status) {
+    const modal = new bootstrap.Modal(document.getElementById('actionModal'));
+    const form = document.getElementById('actionForm');
+    const title = document.getElementById('actionModalTitle');
+    const statusInput = document.getElementById('actionStatus');
+    const submitBtn = document.getElementById('actionSubmitBtn');
+    
+    form.action = `/verlofaanvragen/${requestId}`;
+    statusInput.value = status;
+    
+    if (status === 'goedgekeurd') {
+        title.textContent = 'Verlofaanvraag Goedkeuren';
+        submitBtn.textContent = 'Goedkeuren';
+        submitBtn.className = 'btn btn-success';
+    } else {
+        title.textContent = 'Verlofaanvraag Afwijzen';
+        submitBtn.textContent = 'Afwijzen';
+        submitBtn.className = 'btn btn-danger';
+    }
+    
+    modal.show();
+}
+
+function deleteLeaveRequest(requestId) {
+    if (confirm('Weet u zeker dat u deze verlofaanvraag wilt verwijderen?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/verlofaanvragen/${requestId}`;
+        
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        
+        form.appendChild(methodInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+<% } %>
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+.avatar-sm {
+    width: 2rem;
+    height: 2rem;
+}
+</style>

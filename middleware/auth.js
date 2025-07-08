@@ -1,5 +1,19 @@
 const bcrypt = require('bcryptjs');
 
+// Helper function to get role name from user object
+function getUserRole(user) {
+    if (!user || !user.rol) return null;
+    // If rol is an object (populated), return the naam property
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    // If rol is a string (fallback data), return it directly
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
+
 // Middleware to check if user is authenticated
 function requireAuth(req, res, next) {
     if (req.isAuthenticated()) {
@@ -14,12 +28,12 @@ function requireAdmin(req, res, next) {
     console.log('🛡️ Checking for admin access...');
     console.log('   - Is authenticated:', req.isAuthenticated());
     if (req.user) {
-        console.log('   - User role:', req.user.rol);
+        console.log('   - User role:', getUserRole(req.user));
     } else {
         console.log('   - User object is missing.');
     }
 
-    if (req.isAuthenticated() && req.user && req.user.rol === 'admin') {
+    if (req.isAuthenticated() && req.user && getUserRole(req.user) === 'admin') {
         console.log('✅ Access granted.');
         return next();
     } else {
@@ -32,15 +46,16 @@ function requireAdmin(req, res, next) {
 // Middleware to check if user is admin or accessing their own data
 function requireAdminOrSelf(req, res, next) {
     if (req.isAuthenticated() && req.user) {
-        const isAdmin = req.user.rol === 'admin';
+        const isAdmin = getUserRole(req.user) === 'admin';
+        const isAccessingOwnData = req.params.id && req.params.id === req.user._id.toString();
         
-        // Only allow admin users for edit/delete operations
-        if (isAdmin) {
+        // Allow admin users or users accessing their own data
+        if (isAdmin || isAccessingOwnData) {
             return next();
         }
     }
     
-    req.flash('error', 'Je hebt geen toegang tot deze actie. Alleen administrators kunnen werknemers bewerken of verwijderen.');
+    req.flash('error', 'Je hebt geen toegang tot deze actie. Je kunt alleen je eigen gegevens bewerken.');
     return res.redirect('/dashboard');
 }
 
@@ -86,7 +101,7 @@ function generateRandomPassword(length = 12) {
 // Add user info to all views
 function addUserToViews(req, res, next) {
     res.locals.currentUser = req.user || null;
-    res.locals.isAdmin = req.user && req.user.rol === 'admin';
+    res.locals.isAdmin = req.user && getUserRole(req.user) === 'admin';
     res.locals.messages = {
         success: req.flash('success'),
         error: req.flash('error'),

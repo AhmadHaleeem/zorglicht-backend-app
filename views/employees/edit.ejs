@@ -55,37 +55,15 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="afdeling" class="form-label">Afdeling *</label>
-                            <select class="form-select" id="afdeling" name="afdeling" required>
-                                <option value="">Selecteer afdeling...</option>
-                                <option value="IT" <%= employee.afdeling === 'IT' ? 'selected' : '' %>>IT</option>
-                                <option value="Human Resources" <%= employee.afdeling === 'Human Resources' ? 'selected' : '' %>>Human Resources</option>
-                                <option value="Marketing" <%= employee.afdeling === 'Marketing' ? 'selected' : '' %>>Marketing</option>
-                                <option value="Verkoop" <%= employee.afdeling === 'Verkoop' ? 'selected' : '' %>>Verkoop</option>
-                                <option value="Financiën" <%= employee.afdeling === 'Financiën' ? 'selected' : '' %>>Financiën</option>
-                                <option value="Operaties" <%= employee.afdeling === 'Operaties' ? 'selected' : '' %>>Operaties</option>
-                                <option value="Klantenservice" <%= employee.afdeling === 'Klantenservice' ? 'selected' : '' %>>Klantenservice</option>
-                                <option value="Onderzoek & Ontwikkeling" <%= employee.afdeling === 'Onderzoek & Ontwikkeling' ? 'selected' : '' %>>Onderzoek & Ontwikkeling</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label for="rol" class="form-label">Rol *</label>
                             <select class="form-select" id="rol" name="rol" required>
                                 <option value="">Selecteer rol...</option>
                                 <% roles.forEach(role => { %>
-                                    <option value="<%= role.naam.toLowerCase() %>" <%= employee.rol === role.naam.toLowerCase() ? 'selected' : '' %>>
+                                    <option value="<%= role._id %>" <%= employee.rol && employee.rol._id && employee.rol._id.toString() === role._id.toString() ? 'selected' : '' %>>
                                         <%= role.naam %>
                                     </option>
                                 <% }); %>
                             </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="startdatum" class="form-label">Startdatum *</label>
-                            <input type="date" class="form-control" id="startdatum" name="startdatum" value="<%= employee.startdatum %>" required>
-                            <div class="form-text">Eerste werkdag</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="salaris" class="form-label">Jaarsalaris (€)</label>
@@ -136,18 +114,8 @@
                 </div>
                 
                 <div class="mb-2">
-                    <strong>Afdeling:</strong><br>
-                    <span class="badge bg-info"><%= employee.afdeling %></span>
-                </div>
-                
-                <div class="mb-2">
                     <strong>Rol:</strong><br>
-                    <span class="badge bg-secondary"><%= employee.rol %></span>
-                </div>
-                
-                <div class="mb-2">
-                    <strong>Startdatum:</strong><br>
-                    <span class="text-muted"><%= new Date(employee.startdatum).toLocaleDateString('nl-NL') %></span>
+                    <span class="badge bg-secondary"><%= employee.rol && employee.rol.naam ? employee.rol.naam : 'Geen rol toegewezen' %></span>
                 </div>
                 
                 <% if (employee.salaris) { %>
@@ -186,7 +154,7 @@
 <script>
 // Form validation
 document.querySelector('form').addEventListener('submit', function(e) {
-    const requiredFields = ['naam', 'email', 'functie', 'afdeling', 'rol', 'startdatum'];
+    const requiredFields = ['naam', 'email', 'functie', 'rol'];
     let isValid = true;
     
     requiredFields.forEach(field => {

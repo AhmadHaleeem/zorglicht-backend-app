@@ -52,7 +52,7 @@
                                     <p class="card-text">Totaal Bestanden</p>
                                 </div>
                                 <div class="align-self-center">
-                                    <i class="bi bi-files fs-1"></i>
+                                    <i class="bi bi-files fs-1 text-white"></i>
                                 </div>
                             </div>
                         </div>
@@ -63,11 +63,11 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
                                 <div>
-                                    <h4 class="card-title"><%= files.reduce((total, file) => total + file.grootte, 0) / (1024 * 1024) %> MB</h4>
+                                    <h4 class="card-title"><%= (files.reduce((total, file) => total + file.grootte, 0) / (1024 * 1024)).toFixed(1) %> MB</h4>
                                     <p class="card-text">Totale Grootte</p>
                                 </div>
                                 <div class="align-self-center">
-                                    <i class="bi bi-hdd fs-1"></i>
+                                    <i class="bi bi-hdd fs-1 text-white"></i>
                                 </div>
                             </div>
                         </div>
@@ -82,7 +82,7 @@
                                     <p class="card-text">Bestandstypen</p>
                                 </div>
                                 <div class="align-self-center">
-                                    <i class="bi bi-file-earmark fs-1"></i>
+                                    <i class="bi bi-file-earmark fs-1 text-white"></i>
                                 </div>
                             </div>
                         </div>
@@ -97,7 +97,7 @@
                                     <p class="card-text">Eigenaren</p>
                                 </div>
                                 <div class="align-self-center">
-                                    <i class="bi bi-people fs-1"></i>
+                                    <i class="bi bi-people fs-1 text-white"></i>
                                 </div>
                             </div>
                         </div>
@@ -116,10 +116,10 @@
                 <div class="col-md-3">
                     <select class="form-select" id="filterType">
                         <option value="">Alle typen</option>
-                        <option value="application/pdf">PDF</option>
+                        <option value="pdf">PDF</option>
                         <option value="image">Afbeeldingen</option>
-                        <option value="application/vnd.ms-excel">Excel</option>
-                        <option value="application/msword">Word</option>
+                        <option value="excel">Excel</option>
+                        <option value="word">Word</option>
                         <option value="text">Tekst</option>
                     </select>
                 </div>
@@ -152,7 +152,7 @@
                         <div class="col-md-6 col-lg-4 mb-3 file-item" 
                              data-name="<%= file.naam.toLowerCase() %>" 
                              data-type="<%= file.type %>" 
-                             data-date="<%= file.uploaddatum %>" 
+                             data-date="<%= file.uploadDatum %>" 
                              data-size="<%= file.grootte %>">
                             <div class="card h-100 file-card">
                                 <div class="card-body">
@@ -205,7 +205,7 @@
                                     <div class="file-details">
                                         <small class="text-muted d-block">
                                             <i class="bi bi-calendar me-1"></i>
-                                            <%= new Date(file.uploaddatum).toLocaleDateString('nl-NL') %>
+                                            <%= file.uploadDatum ? new Date(file.uploadDatum).toLocaleDateString('nl-NL') : 'Onbekende datum' %>
                                         </small>
                                         <small class="text-muted d-block">
                                             <i class="bi bi-hdd me-1"></i>
@@ -214,7 +214,7 @@
                                         <% if (canManage) { %>
                                             <small class="text-muted d-block">
                                                 <i class="bi bi-person me-1"></i>
-                                                Eigenaar ID: <%= file.eigenaar %>
+                                                Eigenaar: <%= file.eigenaar && file.eigenaar.naam ? file.eigenaar.naam : file.eigenaar %>
                                             </small>
                                         <% } %>
                                     </div>
@@ -257,6 +257,21 @@
 </div>
 
 <script>
+// Helper function to categorize file types
+function getFileCategory(mimeType) {
+    if (!mimeType) return 'unknown';
+    
+    const type = mimeType.toLowerCase();
+    
+    if (type.includes('pdf')) return 'pdf';
+    if (type.startsWith('image/')) return 'image';
+    if (type.includes('excel') || type.includes('spreadsheet') || type.includes('sheet')) return 'excel';
+    if (type.includes('word') || type.includes('document') || type.includes('msword') || type.includes('wordprocessingml')) return 'word';
+    if (type.startsWith('text/')) return 'text';
+    
+    return 'other';
+}
+
 // Search functionality
 document.getElementById('searchFiles').addEventListener('input', function() {
     const searchTerm = this.value.toLowerCase();
@@ -275,9 +290,10 @@ function filterFiles() {
     fileItems.forEach(item => {
         const name = item.dataset.name;
         const type = item.dataset.type;
+        const fileCategory = getFileCategory(type);
         
         const matchesSearch = name.includes(searchTerm);
-        const matchesType = !filterType || type.includes(filterType);
+        const matchesType = !filterType || fileCategory === filterType;
         
         if (matchesSearch && matchesType) {
             item.style.display = 'block';

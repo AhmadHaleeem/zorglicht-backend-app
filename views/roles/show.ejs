@@ -7,7 +7,7 @@
             <i class="fas fa-arrow-left me-2"></i>
             Terug naar Rollen
         </a>
-        <a href="/rollen/<%= role.id %>/bewerken" class="btn btn-warning">
+        <a href="/rollen/<%= role._id %>/bewerken" class="btn btn-warning">
             <i class="fas fa-edit me-2"></i>
             Bewerken
         </a>
@@ -24,122 +24,44 @@
                 </h6>
             </div>
             <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-tag fa-4x text-primary"></i>
+                    </div>
+                    <h2 class="text-primary mb-3"><%= role.naam %></h2>
+                    <% if (role.beschrijving) { %>
+                        <p class="lead text-muted"><%= role.beschrijving %></p>
+                    <% } else { %>
+                        <p class="lead text-muted"><em>Geen beschrijving opgegeven</em></p>
+                    <% } %>
+                </div>
+                
+                <hr>
+                
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label text-muted">Rol Naam</label>
+                        <label class="form-label text-muted">Aangemaakt</label>
                         <div>
-                            <h4 class="mb-0 text-primary">
-                                <i class="fas fa-user-tag me-2"></i>
-                                <%= role.naam %>
-                            </h4>
+                            <p class="mb-0">
+                                <i class="fas fa-calendar-plus me-2 text-success"></i>
+                                <%= new Date(role.createdAt).toLocaleDateString('nl-NL') %>
+                            </p>
                         </div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label text-muted">Aantal Machtigingen</label>
+                        <label class="form-label text-muted">Laatst Bijgewerkt</label>
                         <div>
-                            <h4 class="mb-0 text-success">
-                                <i class="fas fa-key me-2"></i>
-                                <%= role.machtigingen.length %>
-                            </h4>
+                            <p class="mb-0">
+                                <i class="fas fa-calendar-edit me-2 text-info"></i>
+                                <%= new Date(role.updatedAt).toLocaleDateString('nl-NL') %>
+                            </p>
                         </div>
                     </div>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label text-muted">Beschrijving</label>
-                    <div>
-                        <p class="lead"><%= role.beschrijving %></p>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <div class="card shadow mb-4">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-success">
-                    <i class="fas fa-key me-2"></i>
-                    Machtigingen
-                </h6>
-            </div>
-            <div class="card-body">
-                <% if (role.machtigingen.length > 0) { %>
-                    <div class="row">
-                        <% role.machtigingen.forEach((permission, index) => { %>
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="d-flex align-items-center p-3 border rounded bg-light">
-                                    <div class="me-3">
-                                        <% 
-                                            let iconClass = 'fas fa-check-circle text-success';
-                                            let permissionName = permission;
-                                            let permissionDesc = '';
-                                            
-                                            switch(permission) {
-                                                case 'read':
-                                                    iconClass = 'fas fa-eye text-info';
-                                                    permissionName = 'Lezen';
-                                                    permissionDesc = 'Kan gegevens bekijken';
-                                                    break;
-                                                case 'create':
-                                                    iconClass = 'fas fa-plus text-success';
-                                                    permissionName = 'Aanmaken';
-                                                    permissionDesc = 'Kan nieuwe gegevens aanmaken';
-                                                    break;
-                                                case 'update':
-                                                    iconClass = 'fas fa-edit text-warning';
-                                                    permissionName = 'Bewerken';
-                                                    permissionDesc = 'Kan gegevens wijzigen';
-                                                    break;
-                                                case 'delete':
-                                                    iconClass = 'fas fa-trash text-danger';
-                                                    permissionName = 'Verwijderen';
-                                                    permissionDesc = 'Kan gegevens verwijderen';
-                                                    break;
-                                                case 'admin':
-                                                    iconClass = 'fas fa-crown text-warning';
-                                                    permissionName = 'Administrator';
-                                                    permissionDesc = 'Volledige toegang';
-                                                    break;
-                                                case 'team_management':
-                                                    iconClass = 'fas fa-users-cog text-primary';
-                                                    permissionName = 'Team Beheer';
-                                                    permissionDesc = 'Kan teams beheren';
-                                                    break;
-                                                case 'code_access':
-                                                    iconClass = 'fas fa-code text-info';
-                                                    permissionName = 'Code Toegang';
-                                                    permissionDesc = 'Toegang tot ontwikkelingstools';
-                                                    break;
-                                                case 'reports':
-                                                    iconClass = 'fas fa-chart-bar text-success';
-                                                    permissionName = 'Rapportages';
-                                                    permissionDesc = 'Kan rapporten bekijken';
-                                                    break;
-                                                case 'settings':
-                                                    iconClass = 'fas fa-cog text-secondary';
-                                                    permissionName = 'Instellingen';
-                                                    permissionDesc = 'Kan instellingen wijzigen';
-                                                    break;
-                                            }
-                                        %>
-                                        <i class="<%= iconClass %> fa-2x"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-1"><%= permissionName %></h6>
-                                        <small class="text-muted"><%= permissionDesc %></small>
-                                    </div>
-                                </div>
-                            </div>
-                        <% }); %>
-                    </div>
-                <% } else { %>
-                    <div class="text-center py-4">
-                        <i class="fas fa-key fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">Geen machtigingen toegewezen</h5>
-                        <p class="text-muted">Deze rol heeft nog geen machtigingen.</p>
-                    </div>
-                <% } %>
-            </div>
-        </div>
+
     </div>
 
     <div class="col-lg-4">
@@ -152,7 +74,7 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="/rollen/<%= role.id %>/bewerken" class="btn btn-warning">
+                    <a href="/rollen/<%= role._id %>/bewerken" class="btn btn-warning">
                         <i class="fas fa-edit me-2"></i>
                         Rol Bewerken
                     </a>
@@ -173,91 +95,63 @@
             </div>
         </div>
 
-        <div class="card shadow mb-4">
-            <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-info">
-                    <i class="fas fa-chart-pie me-2"></i>
-                    Rol Statistieken
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label text-muted">Machtigingen Niveau</label>
-                    <div>
-                        <% 
-                            let level = 'Basis';
-                            let levelClass = 'success';
-                            if (role.machtigingen.includes('admin')) {
-                                level = 'Administrator';
-                                levelClass = 'danger';
-                            } else if (role.machtigingen.includes('team_management')) {
-                                level = 'Management';
-                                levelClass = 'warning';
-                            } else if (role.machtigingen.length > 3) {
-                                level = 'Geavanceerd';
-                                levelClass = 'info';
-                            }
-                        %>
-                        <span class="badge bg-<%= levelClass %> fs-6"><%= level %></span>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-muted">Toegangsniveau</label>
-                    <div class="progress" style="height: 20px;">
-                        <% 
-                            const maxPermissions = 9; // Total available permissions
-                            const percentage = (role.machtigingen.length / maxPermissions) * 100;
-                        %>
-                        <div class="progress-bar bg-<%= levelClass %>" role="progressbar" 
-                             style="width: <%= percentage %>%" 
-                             aria-valuenow="<%= role.machtigingen.length %>" 
-                             aria-valuemin="0" 
-                             aria-valuemax="<%= maxPermissions %>">
-                            <%= Math.round(percentage) %>%
-                        </div>
-                    </div>
-                    <small class="text-muted"><%= role.machtigingen.length %> van <%= maxPermissions %> machtigingen</small>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label text-muted">Aangemaakt</label>
-                    <div class="small text-muted">
-                        <%= new Date().toLocaleDateString('nl-NL') %>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="card shadow">
             <div class="card-header">
-                <h6 class="m-0 font-weight-bold text-secondary">
+                <h6 class="m-0 font-weight-bold text-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    Rol Informatie
+                    Rol Details
                 </h6>
             </div>
             <div class="card-body">
-                <h6>Wat betekent deze rol?</h6>
-                <p class="small text-muted mb-3"><%= role.beschrijving %></p>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Status</label>
+                    <div>
+                        <% if (role.isActive) { %>
+                            <span class="badge bg-success fs-6">
+                                <i class="fas fa-check me-1"></i>
+                                Actief
+                            </span>
+                        <% } else { %>
+                            <span class="badge bg-secondary fs-6">
+                                <i class="fas fa-times me-1"></i>
+                                Inactief
+                            </span>
+                        <% } %>
+                    </div>
+                </div>
                 
-                <h6>Machtigingen Uitleg</h6>
-                <ul class="small text-muted mb-0">
-                    <% if (role.machtigingen.includes('admin')) { %>
-                        <li>Deze rol heeft <strong>volledige administratieve rechten</strong></li>
-                    <% } %>
-                    <% if (role.machtigingen.includes('team_management')) { %>
-                        <li>Kan <strong>teams en werknemers beheren</strong></li>
-                    <% } %>
-                    <% if (role.machtigingen.includes('create')) { %>
-                        <li>Kan <strong>nieuwe gegevens aanmaken</strong></li>
-                    <% } %>
-                    <% if (role.machtigingen.includes('delete')) { %>
-                        <li>Kan <strong>gegevens verwijderen</strong></li>
-                    <% } %>
-                    <% if (role.machtigingen.includes('code_access')) { %>
-                        <li>Heeft <strong>toegang tot ontwikkelingstools</strong></li>
-                    <% } %>
-                </ul>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Aangemaakt op</label>
+                    <div class="small text-muted">
+                        <i class="fas fa-calendar-plus me-2 text-success"></i>
+                        <%= new Date(role.createdAt).toLocaleDateString('nl-NL', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) %>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Laatst bijgewerkt</label>
+                    <div class="small text-muted">
+                        <i class="fas fa-calendar-edit me-2 text-info"></i>
+                        <%= new Date(role.updatedAt).toLocaleDateString('nl-NL', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) %>
+                    </div>
+                </div>
+                
+                <% if (role.beschrijving) { %>
+                    <div class="mb-0">
+                        <label class="form-label text-muted">Beschrijving</label>
+                        <div class="small text-muted">
+                            <%= role.beschrijving %>
+                        </div>
+                    </div>
+                <% } %>
             </div>
         </div>
     </div>
@@ -277,7 +171,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
-                <form action="/rollen/<%= role.id %>" method="POST" style="display: inline;">
+                <form action="/rollen/<%= role._id %>" method="POST" style="display: inline;">
                     <input type="hidden" name="_method" value="DELETE">
                     <button type="submit" class="btn btn-danger">
                         <i class="fas fa-trash me-2"></i>

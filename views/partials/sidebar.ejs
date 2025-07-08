@@ -1,3 +1,19 @@
+<%
+// Helper function to get role name from user object
+function getUserRoleName(user) {
+    if (!user || !user.rol) return null;
+    // If rol is an object (populated), return the naam property
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    // If rol is a string (fallback data), return it directly
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
+%>
+
 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar collapse shadow-sm">
     <div class="position-sticky pt-3">
         <!-- Company Logo/Brand -->
@@ -23,8 +39,8 @@
                             <div class="flex-grow-1">
                                 <h6 class="card-title mb-1 fw-bold"><%= currentUser.naam %></h6>
                                 <small class="opacity-90">
-                                    <i class="bi bi-shield<%= currentUser.rol === 'admin' ? '-check' : '' %> me-1"></i>
-                                    <%= currentUser.rol === 'admin' ? 'Administrator' : 'Gebruiker' %>
+                                    <i class="bi bi-shield<%= getUserRoleName(currentUser) === 'admin' ? '-check' : '' %> me-1"></i>
+                                    <%= getUserRoleName(currentUser) === 'admin' ? 'Administrator' : 'Gebruiker' %>
                                 </small>
                             </div>
                         </div>
@@ -47,7 +63,7 @@
                 <a class="nav-link <%= title.includes('Werknemer') ? 'active' : '' %>" href="/werknemers">
                     <i class="bi bi-people me-2"></i>
                     Werknemers
-                    <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.rol !== 'admin') { %>
+                    <% if (typeof currentUser !== 'undefined' && currentUser && getUserRoleName(currentUser) !== 'admin') { %>
                         <span class="badge bg-secondary ms-2">Mijn Profiel</span>
                     <% } %>
                 </a>
@@ -58,14 +74,27 @@
                 <a class="nav-link <%= title.includes('Bestanden') ? 'active' : '' %>" href="/bestanden">
                     <i class="bi bi-folder me-2"></i>
                     Bestanden
-                    <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.rol !== 'admin') { %>
+                    <% if (typeof currentUser !== 'undefined' && currentUser && getUserRoleName(currentUser) !== 'admin') { %>
                         <span class="badge bg-info ms-2">Mijn Bestanden</span>
                     <% } %>
                 </a>
             </li>
             
+            <!-- Leave Requests -->
+            <li class="nav-item">
+                <a class="nav-link <%= title.includes('Verlofaanvragen') ? 'active' : '' %>" href="/verlofaanvragen">
+                    <i class="bi bi-calendar-heart me-2"></i>
+                    Verlofaanvragen
+                    <% if (typeof currentUser !== 'undefined' && currentUser && getUserRoleName(currentUser) === 'admin') { %>
+                        <span class="badge bg-warning ms-2">Beheer</span>
+                    <% } else { %>
+                        <span class="badge bg-success ms-2">Mijn Verlof</span>
+                    <% } %>
+                </a>
+            </li>
+            
             <!-- Admin Only Sections -->
-            <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.rol === 'admin') { %>
+            <% if (typeof currentUser !== 'undefined' && currentUser && getUserRoleName(currentUser) === 'admin') { %>
                 <li class="nav-item">
                     <a class="nav-link <%= title.includes('Rol') ? 'active' : '' %>" href="/rollen">
                         <i class="bi bi-shield-check me-2"></i>
@@ -76,7 +105,7 @@
         </ul>
         
         <!-- Admin Reports Section -->
-        <% if (typeof currentUser !== 'undefined' && currentUser && currentUser.rol === 'admin') { %>
+        <% if (typeof currentUser !== 'undefined' && currentUser && getUserRoleName(currentUser) === 'admin') { %>
             <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
                 <span>Beheer & Rapporten</span>
             </h6>

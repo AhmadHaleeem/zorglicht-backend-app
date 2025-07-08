@@ -9,23 +9,11 @@ const roleSchema = new mongoose.Schema({
     },
     beschrijving: {
         type: String,
-        required: true,
+        required: false,
         trim: true
-    },
-    machtigingen: [{
-        type: String,
-        enum: ['create', 'read', 'update', 'delete', 'admin', 'team_management', 'code_access'],
-        required: true
-    }],
-    isActive: {
-        type: Boolean,
-        default: true
     }
 }, {
     timestamps: true
 });
-
-// Index for better query performance
-roleSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model('Role', roleSchema);

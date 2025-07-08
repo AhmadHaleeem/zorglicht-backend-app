@@ -47,23 +47,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="afdeling" class="form-label">Afdeling *</label>
-                            <select class="form-select" id="afdeling" name="afdeling" required>
-                                <option value="">Selecteer afdeling...</option>
-                                <option value="IT">IT</option>
-                                <option value="Human Resources">Human Resources</option>
-                                <option value="Marketing">Marketing</option>
-                                <option value="Verkoop">Verkoop</option>
-                                <option value="Financiën">Financiën</option>
-                                <option value="Operaties">Operaties</option>
-                                <option value="Klantenservice">Klantenservice</option>
-                                <option value="Onderzoek & Ontwikkeling">Onderzoek & Ontwikkeling</option>
+                            <label for="rol" class="form-label">Gebruikersrol *</label>
+                            <select class="form-select" id="rol" name="rol" required>
+                                <option value="">Selecteer rol...</option>
+                                <% roles.forEach(role => { %>
+                                    <option value="<%= role._id %>"><%= role.naam %></option>
+                                <% }); %>
                             </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Gebruikersrol</label>
-                            <input type="text" class="form-control" value="Gebruiker" readonly>
-                            <div class="form-text">Nieuwe werknemers worden automatisch als gebruiker aangemaakt</div>
+                            <div class="form-text">Selecteer de rol voor deze werknemer</div>
                         </div>
                     </div>
 
@@ -126,8 +117,8 @@
                 <h6>Wachtwoord</h6>
                 <p class="small text-muted">Stel een initieel wachtwoord in voor de nieuwe werknemer. De werknemer kan dit later wijzigen na het eerste inloggen.</p>
                 
-                <h6>Gebruikersrol</h6>
-                <p class="small text-muted">Nieuwe werknemers worden automatisch aangemaakt als gewone gebruikers (geen admin rechten).</p>
+<h6>Gebruikersrol</h6>
+                <p class="small text-muted">Selecteer de juiste rol voor de werknemer. Dit bepaalt hun toegangsniveau in het systeem.</p>
                 
                 <h6>Salaris</h6>
                 <p class="small text-muted">Het salaris is optioneel en wordt alleen gebruikt voor interne administratie.</p>
@@ -145,12 +136,7 @@
                 <% roles.forEach(role => { %>
                     <div class="mb-2">
                         <strong><%= role.naam %></strong>
-                        <p class="small text-muted mb-1"><%= role.beschrijving %></p>
-                        <div class="mb-2">
-                            <% role.machtigingen.forEach(permission => { %>
-                                <span class="badge bg-light text-dark me-1"><%= permission %></span>
-                            <% }); %>
-                        </div>
+                        <p class="small text-muted mb-1"><%= role.beschrijving || 'Geen beschrijving beschikbaar' %></p>
                     </div>
                     <% if (roles.indexOf(role) < roles.length - 1) { %>
                         <hr>
@@ -167,7 +153,7 @@ document.getElementById('startdatum').valueAsDate = new Date();
 
 // Form validation
 document.querySelector('form').addEventListener('submit', function(e) {
-    const requiredFields = ['naam', 'email', 'functie', 'afdeling', 'startdatum', 'password', 'confirmPassword'];
+    const requiredFields = ['naam', 'email', 'functie', 'rol', 'startdatum', 'password', 'confirmPassword'];
     let isValid = true;
     
     requiredFields.forEach(field => {
