@@ -17,6 +17,7 @@ const Employee = require('./models/Employee');
 const Role = require('./models/Role');
 const File = require('./models/File');
 const LeaveRequest = require('./models/LeaveRequest');
+const WorkingHours = require('./models/WorkingHours');
 
 // Import middleware
 const { requireAuth, requireAdmin, requireAdminOrSelf, redirectIfAuthenticated, hashPassword, comparePassword, generateRandomPassword, addUserToViews } = require('./middleware/auth');
@@ -356,7 +357,7 @@ app.get('/', requireAuth, (req, res) => {
 
 app.get('/dashboard', requireAuth, async (req, res) => {
     try {
-        let totalEmployees, totalRoles, totalFiles, newThisMonth, recentEmployees, roleStats, userFiles, pendingLeaveRequests, userLeaveRequests;
+        let totalEmployees, totalRoles, totalFiles, newThisMonth, recentEmployees, roleStats, userFiles, pendingLeaveRequests, userLeaveRequests, pendingWorkingHours, userWorkingHours, approvedWorkingHours;
         
         try {
             // Try MongoDB first
@@ -368,9 +369,14 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             if (getUserRole(req.user) === 'admin') {
                 // For admins: count pending leave requests
                 pendingLeaveRequests = await LeaveRequest.countDocuments({ status: 'in behandeling' });
+                // For admins: count pending working hours
+                pendingWorkingHours = await WorkingHours.countDocuments({ status: 'in behandeling' });
             } else {
                 // For regular users: count their total leave requests
                 userLeaveRequests = await LeaveRequest.countDocuments({ employee: req.user._id });
+                // For regular users: count their total and approved working hours
+                userWorkingHours = await WorkingHours.countDocuments({ employee: req.user._id });
+                approvedWorkingHours = await WorkingHours.countDocuments({ employee: req.user._id, status: 'goedgekeurd' });
             }
             
             // Get new employees this month (based on creation date)
@@ -413,8 +419,11 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             // Get leave request statistics (fallback - set to 0 since no in-memory leave data)
             if (getUserRole(req.user) === 'admin') {
                 pendingLeaveRequests = 0;
+                pendingWorkingHours = 0;
             } else {
                 userLeaveRequests = 0;
+                userWorkingHours = 0;
+                approvedWorkingHours = 0;
             }
             
             // Get new employees this month (based on creation date)
@@ -460,7 +469,10 @@ app.get('/dashboard', requireAuth, async (req, res) => {
                 userFiles,
                 totalFiles,
                 pendingLeaveRequests,
-                userLeaveRequests
+                userLeaveRequests,
+                pendingWorkingHours,
+                userWorkingHours,
+                approvedWorkingHours
             },
             title: 'Dashboard'
         });
@@ -1422,6 +1434,356 @@ app.delete('/verlofaanvragen/:id', requireAdmin, async (req, res) => {
         console.error('Error deleting leave request:', error);
         req.flash('error', 'Er is een fout opgetreden bij het verwijderen van de aanvraag.');
         res.redirect('/verlofaanvragen');
+    }
+});
+
+// Working Hours Routes
+
+// Display working hours page
+app.get('/werkuren', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        let workingHours;
+        let stats = {};
+        
+        if (userRole === 'admin') {
+            // Admin sees all working hours
+            workingHours = await WorkingHours.find()
+                .populate('employee', 'naam email functie')
+                .populate('reviewedBy', 'naam')
+                .sort({ date: -1, createdAt: -1 });
+            
+            // Calculate admin statistics
+            const currentMonth = new Date();
+            currentMonth.setDate(1);
+            currentMonth.setHours(0, 0, 0, 0);
+            
+            const nextMonth = new Date(currentMonth);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            
+            const monthlyHours = await WorkingHours.find({
+                date: { $gte: currentMonth, $lt: nextMonth }
+            });
+            
+            stats.totalWorkingHours = monthlyHours.reduce((sum, hours) => sum + (hours.totalHours || 0), 0);
+            stats.pendingWorkingHours = await WorkingHours.countDocuments({ status: 'in behandeling' });
+        } else {
+            // Regular users see only their own working hours
+            workingHours = await WorkingHours.find({ employee: req.user._id })
+                .populate('reviewedBy', 'naam')
+                .sort({ date: -1, createdAt: -1 });
+            
+            // Calculate user statistics
+            const currentMonth = new Date();
+            currentMonth.setDate(1);
+            currentMonth.setHours(0, 0, 0, 0);
+            
+            const nextMonth = new Date(currentMonth);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            
+            const monthlyHours = await WorkingHours.find({
+                employee: req.user._id,
+                date: { $gte: currentMonth, $lt: nextMonth }
+            });
+            
+            stats.userWorkingHours = monthlyHours.reduce((sum, hours) => sum + (hours.totalHours || 0), 0);
+            stats.approvedWorkingHours = monthlyHours
+                .filter(hours => hours.status === 'goedgekeurd')
+                .reduce((sum, hours) => sum + (hours.totalHours || 0), 0);
+        }
+        
+        res.render('working-hours/index', {
+            title: 'Werkuren',
+            workingHours,
+            userRole,
+            user: req.user,
+            stats
+        });
+    } catch (error) {
+        console.error('Error fetching working hours:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het ophalen van werkuren.');
+        res.redirect('/dashboard');
+    }
+});
+
+// Display new working hours form
+app.get('/werkuren/nieuw', requireAuth, (req, res) => {
+    const userRole = getUserRole(req.user);
+    if (userRole === 'admin') {
+        req.flash('info', 'Als administrator kunt u werkuren beheren, maar niet indienen.');
+        return res.redirect('/werkuren');
+    }
+    
+    res.render('working-hours/new', {
+        title: 'Nieuwe Werkuren',
+        user: req.user
+    });
+});
+
+// Submit new working hours
+app.post('/werkuren', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        if (userRole === 'admin') {
+            req.flash('error', 'Administrators kunnen geen werkuren indienen.');
+            return res.redirect('/werkuren');
+        }
+        
+        const { date, startTime, endTime, breakDuration, description, project } = req.body;
+        
+        // Validate date
+        const workDate = new Date(date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999); // Allow today
+        
+        if (workDate > today) {
+            req.flash('error', 'Werkdatum kan niet in de toekomst liggen.');
+            return res.redirect('/werkuren/nieuw');
+        }
+        
+        // Check for duplicate entry for the same date
+        const existingEntry = await WorkingHours.findOne({
+            employee: req.user._id,
+            date: workDate
+        });
+        
+        if (existingEntry) {
+            req.flash('error', 'U heeft al werkuren geregistreerd voor deze datum.');
+            return res.redirect('/werkuren/nieuw');
+        }
+        
+        // Validate times
+        if (startTime >= endTime) {
+            req.flash('error', 'Eindtijd moet na de starttijd liggen.');
+            return res.redirect('/werkuren/nieuw');
+        }
+        
+        const workingHours = new WorkingHours({
+            employee: req.user._id,
+            date: workDate,
+            startTime: startTime,
+            endTime: endTime,
+            breakDuration: parseInt(breakDuration) || 0,
+            description: description ? description.trim() : '',
+            project: project ? project.trim() : ''
+        });
+        
+        await workingHours.save();
+        
+        req.flash('success', 'Werkuren succesvol geregistreerd! Ze worden ter beoordeling naar uw manager gestuurd.');
+        res.redirect('/werkuren');
+        
+    } catch (error) {
+        console.error('Error creating working hours:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het registreren van werkuren.');
+        res.redirect('/werkuren/nieuw');
+    }
+});
+
+// Display working hours details
+app.get('/werkuren/:id', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        let workingHours;
+        
+        if (userRole === 'admin') {
+            workingHours = await WorkingHours.findById(req.params.id)
+                .populate('employee', 'naam email functie rol')
+                .populate('reviewedBy', 'naam email');
+        } else {
+            workingHours = await WorkingHours.findOne({
+                _id: req.params.id,
+                employee: req.user._id
+            }).populate('reviewedBy', 'naam email');
+        }
+        
+        if (!workingHours) {
+            req.flash('error', 'Werkuren niet gevonden.');
+            return res.redirect('/werkuren');
+        }
+        
+        res.render('working-hours/show', {
+            title: 'Werkuren Details',
+            workingHours,
+            userRole,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Error fetching working hours details:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het ophalen van werkuren details.');
+        res.redirect('/werkuren');
+    }
+});
+
+// Display edit working hours form
+app.get('/werkuren/:id/bewerken', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        if (userRole === 'admin') {
+            req.flash('error', 'Administrators kunnen werkuren niet bewerken.');
+            return res.redirect('/werkuren');
+        }
+        
+        const workingHours = await WorkingHours.findOne({
+            _id: req.params.id,
+            employee: req.user._id
+        });
+        
+        if (!workingHours) {
+            req.flash('error', 'Werkuren niet gevonden.');
+            return res.redirect('/werkuren');
+        }
+        
+        if (workingHours.status !== 'in behandeling') {
+            req.flash('error', 'Alleen werkuren die nog in behandeling zijn kunnen worden bewerkt.');
+            return res.redirect('/werkuren');
+        }
+        
+        res.render('working-hours/edit', {
+            title: 'Werkuren Bewerken',
+            workingHours,
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Error fetching working hours for edit:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het ophalen van werkuren.');
+        res.redirect('/werkuren');
+    }
+});
+
+// Update working hours
+app.put('/werkuren/:id', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        if (userRole === 'admin') {
+            req.flash('error', 'Administrators kunnen werkuren niet bewerken.');
+            return res.redirect('/werkuren');
+        }
+        
+        const workingHours = await WorkingHours.findOne({
+            _id: req.params.id,
+            employee: req.user._id
+        });
+        
+        if (!workingHours) {
+            req.flash('error', 'Werkuren niet gevonden.');
+            return res.redirect('/werkuren');
+        }
+        
+        if (workingHours.status !== 'in behandeling') {
+            req.flash('error', 'Alleen werkuren die nog in behandeling zijn kunnen worden bewerkt.');
+            return res.redirect('/werkuren');
+        }
+        
+        const { date, startTime, endTime, breakDuration, description, project } = req.body;
+        
+        // Validate date
+        const workDate = new Date(date);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        
+        if (workDate > today) {
+            req.flash('error', 'Werkdatum kan niet in de toekomst liggen.');
+            return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+        }
+        
+        // Check for duplicate entry for the same date (excluding current entry)
+        const existingEntry = await WorkingHours.findOne({
+            employee: req.user._id,
+            date: workDate,
+            _id: { $ne: req.params.id }
+        });
+        
+        if (existingEntry) {
+            req.flash('error', 'U heeft al werkuren geregistreerd voor deze datum.');
+            return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+        }
+        
+        // Validate times
+        if (startTime >= endTime) {
+            req.flash('error', 'Eindtijd moet na de starttijd liggen.');
+            return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+        }
+        
+        // Update working hours
+        workingHours.date = workDate;
+        workingHours.startTime = startTime;
+        workingHours.endTime = endTime;
+        workingHours.breakDuration = parseInt(breakDuration) || 0;
+        workingHours.description = description ? description.trim() : '';
+        workingHours.project = project ? project.trim() : '';
+        
+        await workingHours.save();
+        
+        req.flash('success', 'Werkuren succesvol bijgewerkt.');
+        res.redirect('/werkuren');
+        
+    } catch (error) {
+        console.error('Error updating working hours:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het bijwerken van werkuren.');
+        res.redirect('/werkuren');
+    }
+});
+
+// Admin: Review working hours
+app.put('/werkuren/:id/beoordelen', requireAdmin, async (req, res) => {
+    try {
+        const { status, adminResponse } = req.body;
+        
+        const workingHours = await WorkingHours.findById(req.params.id);
+        if (!workingHours) {
+            req.flash('error', 'Werkuren niet gevonden.');
+            return res.redirect('/werkuren');
+        }
+        
+        workingHours.status = status;
+        workingHours.adminResponse = adminResponse || '';
+        workingHours.reviewedBy = req.user._id;
+        workingHours.reviewedAt = new Date();
+        
+        await workingHours.save();
+        
+        const statusText = status === 'goedgekeurd' ? 'goedgekeurd' : 'afgewezen';
+        req.flash('success', `Werkuren succesvol ${statusText}.`);
+        res.redirect('/werkuren');
+        
+    } catch (error) {
+        console.error('Error reviewing working hours:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het beoordelen van werkuren.');
+        res.redirect('/werkuren');
+    }
+});
+
+// Delete working hours
+app.delete('/werkuren/:id', requireAuth, async (req, res) => {
+    try {
+        const userRole = getUserRole(req.user);
+        let workingHours;
+        
+        if (userRole === 'admin') {
+            workingHours = await WorkingHours.findById(req.params.id);
+        } else {
+            workingHours = await WorkingHours.findOne({
+                _id: req.params.id,
+                employee: req.user._id,
+                status: 'in behandeling' // Users can only delete pending entries
+            });
+        }
+        
+        if (!workingHours) {
+            req.flash('error', 'Werkuren niet gevonden of kunnen niet worden verwijderd.');
+            return res.redirect('/werkuren');
+        }
+        
+        await WorkingHours.findByIdAndDelete(req.params.id);
+        
+        req.flash('success', 'Werkuren succesvol verwijderd.');
+        res.redirect('/werkuren');
+        
+    } catch (error) {
+        console.error('Error deleting working hours:', error);
+        req.flash('error', 'Er is een fout opgetreden bij het verwijderen van werkuren.');
+        res.redirect('/werkuren');
     }
 });
 

@@ -93,6 +93,19 @@ function getUserRoleName(user) {
                 </a>
             </li>
             
+            <!-- Working Hours -->
+            <li class="nav-item">
+                <a class="nav-link <%= title.includes('Werkuren') ? 'active' : '' %>" href="/werkuren">
+                    <i class="bi bi-clock me-2"></i>
+                    Werkuren
+                    <% if (typeof currentUser !== 'undefined' && currentUser && getUserRoleName(currentUser) === 'admin') { %>
+                        <span class="badge bg-danger ms-2">Beheer</span>
+                    <% } else { %>
+                        <span class="badge bg-info ms-2">Mijn Uren</span>
+                    <% } %>
+                </a>
+            </li>
+            
             <!-- Admin Only Sections -->
             <% if (typeof currentUser !== 'undefined' && currentUser && getUserRoleName(currentUser) === 'admin') { %>
                 <li class="nav-item">

@@ -1,0 +1,425 @@
+<% layout('layout') -%>
+
+<%
+// Helper function to get role name from user object
+function getUserRoleName(user) {
+    if (!user || !user.rol) return null;
+    if (typeof user.rol === 'object' && user.rol.naam) {
+        return user.rol.naam;
+    }
+    if (typeof user.rol === 'string') {
+        return user.rol;
+    }
+    return null;
+}
+
+// Helper function to format dates
+function formatDate(date) {
+    if (!date) return 'Onbekend';
+    return new Date(date).toLocaleDateString('nl-NL', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Helper function to format datetime
+function formatDateTime(date) {
+    if (!date) return 'Onbekend';
+    return new Date(date).toLocaleDateString('nl-NL', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Helper function to get status badge class
+function getStatusBadgeClass(status) {
+    switch(status) {
+        case 'goedgekeurd': return 'bg-success';
+        case 'afgewezen': return 'bg-danger';
+        case 'in behandeling': return 'bg-warning';
+        default: return 'bg-secondary';
+    }
+}
+
+// Helper function to get status icon
+function getStatusIcon(status) {
+    switch(status) {
+        case 'goedgekeurd': return 'bi-check-circle';
+        case 'afgewezen': return 'bi-x-circle';
+        case 'in behandeling': return 'bi-clock';
+        default: return 'bi-question-circle';
+    }
+}
+%>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-eye me-2"></i>
+                Werkuren Details
+            </h1>
+            <p class="text-muted mb-0">
+                Gedetailleerde informatie over werkuren registratie
+            </p>
+        </div>
+        <div>
+            <a href="/werkuren" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Terug naar Overzicht
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Details Card -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Werkuren Informatie
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Employee Info (Admin View) -->
+                    <% if (userRole === 'admin') { %>
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-person me-2"></i>
+                                Medewerker Informatie
+                            </h6>
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="avatar me-3">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 18px;">
+                                        <%= workingHours.employee && workingHours.employee.naam ? workingHours.employee.naam.charAt(0).toUpperCase() : 'N' %>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1"><%= workingHours.employee ? workingHours.employee.naam : 'Onbekend' %></h6>
+                                    <p class="text-muted mb-1"><%= workingHours.employee ? workingHours.employee.email : '' %></p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-briefcase me-1"></i>
+                                        <%= workingHours.employee && workingHours.employee.rol ? getUserRoleName(workingHours.employee) : 'Onbekende rol' %>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <% } %>
+
+                    <!-- Time Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-clock me-2"></i>
+                                Tijd Details
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label text-muted small">Datum</label>
+                                    <div class="fw-bold">
+                                        <i class="bi bi-calendar3 me-2 text-primary"></i>
+                                        <%= formatDate(workingHours.date) %>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label text-muted small">Start Tijd</label>
+                                    <div class="fw-bold">
+                                        <i class="bi bi-play-circle me-2 text-success"></i>
+                                        <%= workingHours.startTime %>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label text-muted small">Eind Tijd</label>
+                                    <div class="fw-bold">
+                                        <i class="bi bi-stop-circle me-2 text-danger"></i>
+                                        <%= workingHours.endTime %>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label text-muted small">Pauze</label>
+                                    <div class="fw-bold">
+                                        <i class="bi bi-pause-circle me-2 text-warning"></i>
+                                        <%= workingHours.breakDuration || 0 %> min
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Total Hours Highlight -->
+                            <div class="alert alert-info mt-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-calculator fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-1">Totaal Werkuren: <span class="fw-bold"><%= workingHours.totalHours || 0 %></span> uur</h5>
+                                        <small class="text-muted">Berekend: (Eindtijd - Starttijd) - Pauze</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project and Description -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-briefcase me-2"></i>
+                                Project
+                            </h6>
+                            <div class="p-3 bg-light rounded">
+                                <% if (workingHours.project) { %>
+                                    <i class="bi bi-folder me-2 text-primary"></i>
+                                    <%= workingHours.project %>
+                                <% } else { %>
+                                    <i class="bi bi-dash-circle me-2 text-muted"></i>
+                                    <span class="text-muted">Geen project opgegeven</span>
+                                <% } %>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="text-primary mb-3">
+                                <i class="bi bi-card-text me-2"></i>
+                                Beschrijving
+                            </h6>
+                            <div class="p-3 bg-light rounded" style="min-height: 80px;">
+                                <% if (workingHours.description) { %>
+                                    <%= workingHours.description %>
+                                <% } else { %>
+                                    <span class="text-muted">Geen beschrijving opgegeven</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status and Actions Sidebar -->
+        <div class="col-lg-4">
+            <!-- Status Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-flag me-2"></i>
+                        Status
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <span class="badge <%= getStatusBadgeClass(workingHours.status) %> p-3" style="font-size: 1.1em;">
+                            <i class="bi <%= getStatusIcon(workingHours.status) %> me-2"></i>
+                            <%= workingHours.status.charAt(0).toUpperCase() + workingHours.status.slice(1) %>
+                        </span>
+                    </div>
+                    
+                    <% if (workingHours.status === 'in behandeling') { %>
+                        <p class="text-muted mb-0">Wacht op beoordeling door manager</p>
+                    <% } else if (workingHours.status === 'goedgekeurd') { %>
+                        <p class="text-success mb-0">Goedgekeurd door manager</p>
+                    <% } else if (workingHours.status === 'afgewezen') { %>
+                        <p class="text-danger mb-0">Afgewezen door manager</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Review Information -->
+            <% if (workingHours.reviewedBy || workingHours.adminResponse) { %>
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-chat-square-text me-2"></i>
+                        Beoordeling
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <% if (workingHours.reviewedBy) { %>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Beoordeeld door</label>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar me-2">
+                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;">
+                                    <%= workingHours.reviewedBy.naam.charAt(0).toUpperCase() %>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="fw-bold"><%= workingHours.reviewedBy.naam %></div>
+                                <small class="text-muted"><%= workingHours.reviewedBy.email %></small>
+                            </div>
+                        </div>
+                    </div>
+                    <% } %>
+                    
+                    <% if (workingHours.reviewedAt) { %>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Beoordeeld op</label>
+                        <div>
+                            <i class="bi bi-calendar-check me-2 text-primary"></i>
+                            <%= formatDateTime(workingHours.reviewedAt) %>
+                        </div>
+                    </div>
+                    <% } %>
+                    
+                    <% if (workingHours.adminResponse) { %>
+                    <div>
+                        <label class="form-label text-muted small">Reactie</label>
+                        <div class="p-3 bg-light rounded">
+                            <%= workingHours.adminResponse %>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+            <% } %>
+
+            <!-- Timestamps -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Tijdstempels
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Aangemaakt</label>
+                        <div>
+                            <i class="bi bi-plus-circle me-2 text-success"></i>
+                            <%= formatDateTime(workingHours.createdAt) %>
+                        </div>
+                    </div>
+                    <% if (workingHours.updatedAt && workingHours.updatedAt.getTime() !== workingHours.createdAt.getTime()) { %>
+                    <div>
+                        <label class="form-label text-muted small">Laatst bijgewerkt</label>
+                        <div>
+                            <i class="bi bi-pencil-square me-2 text-warning"></i>
+                            <%= formatDateTime(workingHours.updatedAt) %>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-gear me-2"></i>
+                        Acties
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <% if (userRole === 'admin' && workingHours.status === 'in behandeling') { %>
+                            <button type="button" class="btn btn-success" 
+                                    onclick="reviewWorkingHours('<%= workingHours._id %>', 'goedgekeurd')">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Goedkeuren
+                            </button>
+                            <button type="button" class="btn btn-danger" 
+                                    onclick="reviewWorkingHours('<%= workingHours._id %>', 'afgewezen')">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Afwijzen
+                            </button>
+                            <hr>
+                        <% } %>
+                        
+                        <% if (userRole !== 'admin' && workingHours.status === 'in behandeling') { %>
+                            <a href="/werkuren/<%= workingHours._id %>/bewerken" class="btn btn-primary">
+                                <i class="bi bi-pencil me-2"></i>
+                                Bewerken
+                            </a>
+                        <% } %>
+                        
+                        <% if ((userRole === 'admin') || (userRole !== 'admin' && workingHours.status === 'in behandeling')) { %>
+                            <button type="button" class="btn btn-outline-danger" 
+                                    onclick="deleteWorkingHours('<%= workingHours._id %>')">
+                                <i class="bi bi-trash me-2"></i>
+                                Verwijderen
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal (Admin Only) -->
+<% if (userRole === 'admin') { %>
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="reviewForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Werkuren Beoordelen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="_method" value="PUT">
+                    <input type="hidden" name="status" id="reviewStatus">
+                    
+                    <div class="mb-3">
+                        <label for="adminResponse" class="form-label">Reactie (optioneel)</label>
+                        <textarea class="form-control" id="adminResponse" name="adminResponse" rows="3" 
+                                  placeholder="Voeg een reactie toe voor de medewerker..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn" id="actionSubmitBtn">Bevestigen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<script>
+<% if (userRole === 'admin') { %>
+function reviewWorkingHours(hoursId, action) {
+    const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+    const form = document.getElementById('reviewForm');
+    const statusInput = document.getElementById('reviewStatus');
+    const submitBtn = document.getElementById('actionSubmitBtn');
+    const modalTitle = document.getElementById('reviewModalLabel');
+    
+    form.action = `/werkuren/${hoursId}/beoordelen`;
+    statusInput.value = action;
+    
+    if (action === 'goedgekeurd') {
+        modalTitle.textContent = 'Werkuren Goedkeuren';
+        submitBtn.textContent = 'Goedkeuren';
+        submitBtn.className = 'btn btn-success';
+    } else {
+        modalTitle.textContent = 'Werkuren Afwijzen';
+        submitBtn.textContent = 'Afwijzen';
+        submitBtn.className = 'btn btn-danger';
+    }
+    
+    modal.show();
+}
+<% } %>
+
+function deleteWorkingHours(hoursId) {
+    if (confirm('Weet u zeker dat u deze werkuren wilt verwijderen?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/werkuren/${hoursId}`;
+        
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        
+        form.appendChild(methodInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>

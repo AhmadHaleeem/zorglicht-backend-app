@@ -1,0 +1,245 @@
+<% layout('layout') -%>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="bi bi-plus-circle me-2"></i>
+                Nieuwe Werkuren
+            </h1>
+            <p class="text-muted mb-0">Registreer uw werkuren voor beoordeling</p>
+        </div>
+        <div>
+            <a href="/werkuren" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Terug naar Overzicht
+            </a>
+        </div>
+    </div>
+
+    <!-- Working Hours Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-clock me-2"></i>
+                        Werkuren Formulier
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form action="/werkuren" method="POST" id="workingHoursForm">
+                        <div class="row">
+                            <!-- Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    Datum <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" class="form-control" id="date" name="date" 
+                                       value="<%= new Date().toISOString().split('T')[0] %>" 
+                                       max="<%= new Date().toISOString().split('T')[0] %>" 
+                                       required>
+                                <div class="form-text">Selecteer de werkdag</div>
+                            </div>
+
+                            <!-- Project -->
+                            <div class="col-md-6 mb-3">
+                                <label for="project" class="form-label">
+                                    <i class="bi bi-briefcase me-1"></i>
+                                    Project
+                                </label>
+                                <input type="text" class="form-control" id="project" name="project" 
+                                       placeholder="Bijv. Thuiszorg Route A, Medicatie Beheer, Wondverzorging">
+                                <div class="form-text">Optioneel: naam van het project</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Start Time -->
+                            <div class="col-md-4 mb-3">
+                                <label for="startTime" class="form-label">
+                                    <i class="bi bi-play-circle me-1"></i>
+                                    Start Tijd <span class="text-danger">*</span>
+                                </label>
+                                <input type="time" class="form-control" id="startTime" name="startTime" 
+                                       value="09:00" required>
+                                <div class="form-text">Wanneer bent u begonnen?</div>
+                            </div>
+
+                            <!-- End Time -->
+                            <div class="col-md-4 mb-3">
+                                <label for="endTime" class="form-label">
+                                    <i class="bi bi-stop-circle me-1"></i>
+                                    Eind Tijd <span class="text-danger">*</span>
+                                </label>
+                                <input type="time" class="form-control" id="endTime" name="endTime" 
+                                       value="17:00" required>
+                                <div class="form-text">Wanneer bent u gestopt?</div>
+                            </div>
+
+                            <!-- Break Duration -->
+                            <div class="col-md-4 mb-3">
+                                <label for="breakDuration" class="form-label">
+                                    <i class="bi bi-pause-circle me-1"></i>
+                                    Pauze (minuten)
+                                </label>
+                                <input type="number" class="form-control" id="breakDuration" name="breakDuration" 
+                                       value="30" min="0" max="480" step="15">
+                                <div class="form-text">Totale pauzetijd in minuten</div>
+                            </div>
+                        </div>
+
+                        <!-- Calculated Hours Display -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="alert alert-info d-flex align-items-center">
+                                    <i class="bi bi-calculator me-2"></i>
+                                    <div>
+                                        <strong>Berekende Werkuren: </strong>
+                                        <span id="calculatedHours" class="fw-bold">8.0</span> uur
+                                        <div class="small text-muted mt-1">
+                                            Dit wordt automatisch berekend op basis van start- en eindtijd minus pauze
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="bi bi-card-text me-1"></i>
+                                Beschrijving van Werkzaamheden
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                      placeholder="Beschrijf kort wat u vandaag heeft gedaan...\n\nBijvoorbeeld:\n- Cliënten bezocht voor persoonlijke verzorging\n- Medicatie toegediend en gecontroleerd\n- Wondverzorging uitgevoerd\n- Huishoudelijke ondersteuning geboden\n- Rapportage bijgewerkt in zorgsysteem\n- Overleg met familie en zorgteam"></textarea>
+                            <div class="form-text">Optioneel: geef een overzicht van uw werkzaamheden</div>
+                        </div>
+
+                        <!-- Important Notes -->
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Belangrijk om te weten:
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li>Uw werkuren worden ter beoordeling naar de manager gestuurd</li>
+                                <li>U kunt alleen werkuren van vandaag of eerder invoeren</li>
+                                <li>Werkuren kunnen alleen worden bewerkt zolang ze nog niet zijn beoordeeld</li>
+                                <li>Zorg ervoor dat alle tijden correct zijn voordat u indient</li>
+                            </ul>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/werkuren" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Annuleren
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Werkuren Opslaan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Calculate working hours automatically
+function calculateHours() {
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const breakDuration = parseInt(document.getElementById('breakDuration').value) || 0;
+    
+    if (startTime && endTime) {
+        const start = new Date(`2000-01-01T${startTime}:00`);
+        const end = new Date(`2000-01-01T${endTime}:00`);
+        
+        // Handle overnight shifts
+        if (end < start) {
+            end.setDate(end.getDate() + 1);
+        }
+        
+        const diffMs = end - start;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        const breakHours = breakDuration / 60;
+        const totalHours = Math.max(0, diffHours - breakHours);
+        
+        document.getElementById('calculatedHours').textContent = totalHours.toFixed(1);
+        
+        // Validate reasonable working hours
+        if (totalHours > 12) {
+            document.getElementById('calculatedHours').parentElement.parentElement.className = 
+                'alert alert-warning d-flex align-items-center';
+            document.getElementById('calculatedHours').parentElement.innerHTML = 
+                '<strong>Berekende Werkuren: </strong>' +
+                '<span id="calculatedHours" class="fw-bold">' + totalHours.toFixed(1) + '</span> uur' +
+                '<div class="small text-warning mt-1">' +
+                '<i class="bi bi-exclamation-triangle me-1"></i>' +
+                'Let op: Dit lijkt veel werkuren voor één dag. Controleer uw tijden.' +
+                '</div>';
+        } else {
+            document.getElementById('calculatedHours').parentElement.parentElement.className = 
+                'alert alert-info d-flex align-items-center';
+            document.getElementById('calculatedHours').parentElement.innerHTML = 
+                '<strong>Berekende Werkuren: </strong>' +
+                '<span id="calculatedHours" class="fw-bold">' + totalHours.toFixed(1) + '</span> uur' +
+                '<div class="small text-muted mt-1">' +
+                'Dit wordt automatisch berekend op basis van start- en eindtijd minus pauze' +
+                '</div>';
+        }
+    }
+}
+
+// Add event listeners
+document.getElementById('startTime').addEventListener('change', calculateHours);
+document.getElementById('endTime').addEventListener('change', calculateHours);
+document.getElementById('breakDuration').addEventListener('input', calculateHours);
+
+// Form validation
+document.getElementById('workingHoursForm').addEventListener('submit', function(e) {
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const date = document.getElementById('date').value;
+    
+    // Check if end time is after start time (same day)
+    if (startTime && endTime && startTime >= endTime) {
+        e.preventDefault();
+        alert('Eindtijd moet na de starttijd zijn. Voor nachtdiensten, neem contact op met uw manager.');
+        return false;
+    }
+    
+    // Check if date is not in the future
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (selectedDate > today) {
+        e.preventDefault();
+        alert('U kunt geen werkuren voor toekomstige datums invoeren.');
+        return false;
+    }
+    
+    // Check if total hours is reasonable
+    const totalHours = parseFloat(document.getElementById('calculatedHours').textContent);
+    if (totalHours > 16) {
+        if (!confirm('U heeft meer dan 16 uur werkuren ingevoerd. Weet u zeker dat dit correct is?')) {
+            e.preventDefault();
+            return false;
+        }
+    }
+    
+    return true;
+});
+
+// Initialize calculation on page load
+document.addEventListener('DOMContentLoaded', function() {
+    calculateHours();
+});
+</script>
