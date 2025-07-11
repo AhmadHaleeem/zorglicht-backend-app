@@ -44,6 +44,25 @@ function getUserRoleName(user) {
                                 </small>
                             </div>
                         </div>
+                        <!-- Mobile User Actions -->
+                        <div class="d-md-none mt-3 pt-2 border-top border-light border-opacity-25">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <a href="/werknemers/<%= currentUser.id %>" class="btn btn-light btn-sm w-100 text-primary">
+                                        <i class="bi bi-person me-1"></i>
+                                        Profiel
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <form action="/logout" method="POST" class="d-inline w-100">
+                                        <button type="submit" class="btn btn-outline-light btn-sm w-100">
+                                            <i class="bi bi-box-arrow-right me-1"></i>
+                                            Uitloggen
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -47,8 +47,8 @@ function getUserRoleName(user) {
             <span class="navbar-toggler-icon"></span>
         </button>
         
-        <!-- User Menu -->
-        <div class="navbar-nav">
+        <!-- User Menu - Hidden on mobile, shown on desktop -->
+        <div class="navbar-nav d-none d-md-flex">
             <div class="nav-item text-nowrap">
                 <% if (typeof currentUser !== 'undefined' && currentUser) { %>
                     <div class="dropdown">

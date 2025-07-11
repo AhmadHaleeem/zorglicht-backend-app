@@ -1451,7 +1451,7 @@ app.get('/werkuren', requireAuth, async (req, res) => {
             workingHours = await WorkingHours.find()
                 .populate('employee', 'naam email functie')
                 .populate('reviewedBy', 'naam')
-                .sort({ date: -1, createdAt: -1 });
+                .sort({ createdAt: -1 });
             
             // Calculate admin statistics
             const currentMonth = new Date();
@@ -1462,7 +1462,7 @@ app.get('/werkuren', requireAuth, async (req, res) => {
             nextMonth.setMonth(nextMonth.getMonth() + 1);
             
             const monthlyHours = await WorkingHours.find({
-                date: { $gte: currentMonth, $lt: nextMonth }
+                'timeSlots.date': { $gte: currentMonth, $lt: nextMonth }
             });
             
             stats.totalWorkingHours = monthlyHours.reduce((sum, hours) => sum + (hours.totalHours || 0), 0);
@@ -1471,7 +1471,7 @@ app.get('/werkuren', requireAuth, async (req, res) => {
             // Regular users see only their own working hours
             workingHours = await WorkingHours.find({ employee: req.user._id })
                 .populate('reviewedBy', 'naam')
-                .sort({ date: -1, createdAt: -1 });
+                .sort({ createdAt: -1 });
             
             // Calculate user statistics
             const currentMonth = new Date();
@@ -1483,7 +1483,7 @@ app.get('/werkuren', requireAuth, async (req, res) => {
             
             const monthlyHours = await WorkingHours.find({
                 employee: req.user._id,
-                date: { $gte: currentMonth, $lt: nextMonth }
+                'timeSlots.date': { $gte: currentMonth, $lt: nextMonth }
             });
             
             stats.userWorkingHours = monthlyHours.reduce((sum, hours) => sum + (hours.totalHours || 0), 0);
@@ -1529,41 +1529,67 @@ app.post('/werkuren', requireAuth, async (req, res) => {
             return res.redirect('/werkuren');
         }
         
-        const { date, startTime, endTime, breakDuration, description, project } = req.body;
+        const { timeSlots, description, project } = req.body;
         
-        // Validate date
-        const workDate = new Date(date);
+        // Validate timeSlots
+        if (!timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
+            req.flash('error', 'Minimaal één tijdslot is vereist.');
+            return res.redirect('/werkuren/nieuw');
+        }
+        
         const today = new Date();
         today.setHours(23, 59, 59, 999); // Allow today
         
-        if (workDate > today) {
-            req.flash('error', 'Werkdatum kan niet in de toekomst liggen.');
-            return res.redirect('/werkuren/nieuw');
+        // Validate each time slot
+        for (let i = 0; i < timeSlots.length; i++) {
+            const slot = timeSlots[i];
+            
+            // Validate required fields
+            if (!slot.date || !slot.startTime || !slot.endTime) {
+                req.flash('error', `Tijdslot ${i + 1}: Datum, start- en eindtijd zijn verplicht.`);
+                return res.redirect('/werkuren/nieuw');
+            }
+            
+            // Validate date format and value
+            if (typeof slot.date !== 'string' || slot.date.trim() === '') {
+                req.flash('error', `Tijdslot ${i + 1}: Datum is verplicht.`);
+                return res.redirect('/werkuren/nieuw');
+            }
+            
+            const slotDate = new Date(slot.date);
+            if (isNaN(slotDate.getTime())) {
+                req.flash('error', `Tijdslot ${i + 1}: Ongeldige datum.`);
+                return res.redirect('/werkuren/nieuw');
+            }
+            if (slotDate > today) {
+                req.flash('error', `Tijdslot ${i + 1}: Datum kan niet in de toekomst liggen.`);
+                return res.redirect('/werkuren/nieuw');
+            }
+            
+            // Validate time logic
+            if (slot.startTime >= slot.endTime) {
+                req.flash('error', `Tijdslot ${i + 1}: Eindtijd moet na de starttijd liggen.`);
+                return res.redirect('/werkuren/nieuw');
+            }
         }
         
-        // Check for duplicate entry for the same date
-        const existingEntry = await WorkingHours.findOne({
-            employee: req.user._id,
-            date: workDate
+        // Process timeSlots to ensure proper format
+        const processedTimeSlots = timeSlots.map(slot => {
+            const slotDate = new Date(slot.date);
+            if (isNaN(slotDate.getTime())) {
+                throw new Error(`Invalid date value: ${slot.date}`);
+            }
+            return {
+                date: slotDate,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                breakDuration: parseInt(slot.breakDuration) || 0
+            };
         });
-        
-        if (existingEntry) {
-            req.flash('error', 'U heeft al werkuren geregistreerd voor deze datum.');
-            return res.redirect('/werkuren/nieuw');
-        }
-        
-        // Validate times
-        if (startTime >= endTime) {
-            req.flash('error', 'Eindtijd moet na de starttijd liggen.');
-            return res.redirect('/werkuren/nieuw');
-        }
         
         const workingHours = new WorkingHours({
             employee: req.user._id,
-            date: workDate,
-            startTime: startTime,
-            endTime: endTime,
-            breakDuration: parseInt(breakDuration) || 0,
+            timeSlots: processedTimeSlots,
             description: description ? description.trim() : '',
             project: project ? project.trim() : ''
         });
@@ -1675,41 +1701,66 @@ app.put('/werkuren/:id', requireAuth, async (req, res) => {
             return res.redirect('/werkuren');
         }
         
-        const { date, startTime, endTime, breakDuration, description, project } = req.body;
+        const { timeSlots, description, project } = req.body;
         
-        // Validate date
-        const workDate = new Date(date);
+        // Validate timeSlots
+        if (!timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
+            req.flash('error', 'Minimaal één tijdslot is vereist.');
+            return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+        }
+        
         const today = new Date();
         today.setHours(23, 59, 59, 999);
         
-        if (workDate > today) {
-            req.flash('error', 'Werkdatum kan niet in de toekomst liggen.');
-            return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+        // Validate each time slot
+        for (let i = 0; i < timeSlots.length; i++) {
+            const slot = timeSlots[i];
+            
+            // Validate required fields
+            if (!slot.date || !slot.startTime || !slot.endTime) {
+                req.flash('error', `Tijdslot ${i + 1}: Datum, start- en eindtijd zijn verplicht.`);
+                return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+            }
+            
+            // Validate date format and value
+            if (typeof slot.date !== 'string' || slot.date.trim() === '') {
+                req.flash('error', `Tijdslot ${i + 1}: Datum is verplicht.`);
+                return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+            }
+            
+            const slotDate = new Date(slot.date);
+            if (isNaN(slotDate.getTime())) {
+                req.flash('error', `Tijdslot ${i + 1}: Ongeldige datum.`);
+                return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+            }
+            if (slotDate > today) {
+                req.flash('error', `Tijdslot ${i + 1}: Datum kan niet in de toekomst liggen.`);
+                return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+            }
+            
+            // Validate time logic
+            if (slot.startTime >= slot.endTime) {
+                req.flash('error', `Tijdslot ${i + 1}: Eindtijd moet na de starttijd liggen.`);
+                return res.redirect(`/werkuren/${req.params.id}/bewerken`);
+            }
         }
         
-        // Check for duplicate entry for the same date (excluding current entry)
-        const existingEntry = await WorkingHours.findOne({
-            employee: req.user._id,
-            date: workDate,
-            _id: { $ne: req.params.id }
+        // Process timeSlots to ensure proper format
+        const processedTimeSlots = timeSlots.map(slot => {
+            const slotDate = new Date(slot.date);
+            if (isNaN(slotDate.getTime())) {
+                throw new Error(`Invalid date value: ${slot.date}`);
+            }
+            return {
+                date: slotDate,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                breakDuration: parseInt(slot.breakDuration) || 0
+            };
         });
         
-        if (existingEntry) {
-            req.flash('error', 'U heeft al werkuren geregistreerd voor deze datum.');
-            return res.redirect(`/werkuren/${req.params.id}/bewerken`);
-        }
-        
-        // Validate times
-        if (startTime >= endTime) {
-            req.flash('error', 'Eindtijd moet na de starttijd liggen.');
-            return res.redirect(`/werkuren/${req.params.id}/bewerken`);
-        }
-        
         // Update working hours
-        workingHours.date = workDate;
-        workingHours.startTime = startTime;
-        workingHours.endTime = endTime;
-        workingHours.breakDuration = parseInt(breakDuration) || 0;
+        workingHours.timeSlots = processedTimeSlots;
         workingHours.description = description ? description.trim() : '';
         workingHours.project = project ? project.trim() : '';
         

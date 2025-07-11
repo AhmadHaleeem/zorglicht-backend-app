@@ -20,7 +20,7 @@
 
     <!-- Working Hours Form -->
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card shadow">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">
@@ -30,22 +30,9 @@
                 </div>
                 <div class="card-body">
                     <form action="/werkuren" method="POST" id="workingHoursForm">
+                        <!-- Project -->
                         <div class="row">
-                            <!-- Date -->
-                            <div class="col-md-6 mb-3">
-                                <label for="date" class="form-label">
-                                    <i class="bi bi-calendar3 me-1"></i>
-                                    Datum <span class="text-danger">*</span>
-                                </label>
-                                <input type="date" class="form-control" id="date" name="date" 
-                                       value="<%= new Date().toISOString().split('T')[0] %>" 
-                                       max="<%= new Date().toISOString().split('T')[0] %>" 
-                                       required>
-                                <div class="form-text">Selecteer de werkdag</div>
-                            </div>
-
-                            <!-- Project -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-12 mb-3">
                                 <label for="project" class="form-label">
                                     <i class="bi bi-briefcase me-1"></i>
                                     Project
@@ -56,38 +43,76 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <!-- Start Time -->
-                            <div class="col-md-4 mb-3">
-                                <label for="startTime" class="form-label">
-                                    <i class="bi bi-play-circle me-1"></i>
-                                    Start Tijd <span class="text-danger">*</span>
-                                </label>
-                                <input type="time" class="form-control" id="startTime" name="startTime" 
-                                       value="09:00" required>
-                                <div class="form-text">Wanneer bent u begonnen?</div>
+                        <!-- Time Slots Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-clock me-2"></i>
+                                    Tijdsloten <span class="text-danger">*</span>
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-success" id="addTimeSlot">
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    Tijdslot Toevoegen
+                                </button>
                             </div>
+                            
+                            <div id="timeSlotsContainer">
+                                <!-- Initial time slot -->
+                                <div class="time-slot-row border rounded p-3 mb-3" data-slot-index="0">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted fw-bold">Tijdslot 1</small>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-time-slot" style="display: none;">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    <div class="row">
+                                        <!-- Date -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">
+                                                <i class="bi bi-calendar3 me-1"></i>
+                                                Datum <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" class="form-control slot-date" name="timeSlots[0][date]" 
+                                                   value="<%= new Date().toISOString().split('T')[0] %>" 
+                                                   max="<%= new Date().toISOString().split('T')[0] %>" 
+                                                   required>
+                                            <div class="form-text">Werkdag voor dit tijdslot</div>
+                                        </div>
 
-                            <!-- End Time -->
-                            <div class="col-md-4 mb-3">
-                                <label for="endTime" class="form-label">
-                                    <i class="bi bi-stop-circle me-1"></i>
-                                    Eind Tijd <span class="text-danger">*</span>
-                                </label>
-                                <input type="time" class="form-control" id="endTime" name="endTime" 
-                                       value="17:00" required>
-                                <div class="form-text">Wanneer bent u gestopt?</div>
-                            </div>
+                                        <!-- Start Time -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">
+                                                <i class="bi bi-play-circle me-1"></i>
+                                                Start Tijd <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="time" class="form-control start-time" name="timeSlots[0][startTime]" 
+                                                   value="09:00" required>
+                                            <div class="form-text">Wanneer bent u begonnen?</div>
+                                        </div>
 
-                            <!-- Break Duration -->
-                            <div class="col-md-4 mb-3">
-                                <label for="breakDuration" class="form-label">
-                                    <i class="bi bi-pause-circle me-1"></i>
-                                    Pauze (minuten)
-                                </label>
-                                <input type="number" class="form-control" id="breakDuration" name="breakDuration" 
-                                       value="30" min="0" max="480" step="15">
-                                <div class="form-text">Totale pauzetijd in minuten</div>
+                                        <!-- End Time -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">
+                                                <i class="bi bi-stop-circle me-1"></i>
+                                                Eind Tijd <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="time" class="form-control end-time" name="timeSlots[0][endTime]" 
+                                                   value="17:00" required>
+                                            <div class="form-text">Wanneer bent u gestopt?</div>
+                                        </div>
+
+                                        <!-- Break Duration -->
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">
+                                                <i class="bi bi-pause-circle me-1"></i>
+                                                Pauze (minuten)
+                                            </label>
+                                            <input type="number" class="form-control break-duration" name="timeSlots[0][breakDuration]" 
+                                                   value="30" min="0" max="480" step="15">
+                                            <div class="form-text">Pauzetijd voor dit tijdslot</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -151,88 +176,249 @@
 </div>
 
 <script>
-// Calculate working hours automatically
+let timeSlotCounter = 1;
+
+// Calculate working hours from all time slots
 function calculateHours() {
-    const startTime = document.getElementById('startTime').value;
-    const endTime = document.getElementById('endTime').value;
-    const breakDuration = parseInt(document.getElementById('breakDuration').value) || 0;
+    const timeSlots = document.querySelectorAll('.time-slot-row');
+    let totalHours = 0;
     
-    if (startTime && endTime) {
-        const start = new Date(`2000-01-01T${startTime}:00`);
-        const end = new Date(`2000-01-01T${endTime}:00`);
+    timeSlots.forEach(slot => {
+        const startTime = slot.querySelector('.start-time').value;
+        const endTime = slot.querySelector('.end-time').value;
+        const breakDuration = parseInt(slot.querySelector('.break-duration').value) || 0;
         
-        // Handle overnight shifts
-        if (end < start) {
-            end.setDate(end.getDate() + 1);
+        if (startTime && endTime) {
+            const start = new Date(`2000-01-01T${startTime}:00`);
+            const end = new Date(`2000-01-01T${endTime}:00`);
+            
+            // Handle overnight shifts
+            if (end < start) {
+                end.setDate(end.getDate() + 1);
+            }
+            
+            const diffMs = end - start;
+            const diffHours = diffMs / (1000 * 60 * 60);
+            const breakHours = breakDuration / 60;
+            const slotHours = Math.max(0, diffHours - breakHours);
+            
+            totalHours += slotHours;
         }
-        
-        const diffMs = end - start;
-        const diffHours = diffMs / (1000 * 60 * 60);
-        const breakHours = breakDuration / 60;
-        const totalHours = Math.max(0, diffHours - breakHours);
-        
-        document.getElementById('calculatedHours').textContent = totalHours.toFixed(1);
-        
-        // Validate reasonable working hours
-        if (totalHours > 12) {
-            document.getElementById('calculatedHours').parentElement.parentElement.className = 
-                'alert alert-warning d-flex align-items-center';
-            document.getElementById('calculatedHours').parentElement.innerHTML = 
-                '<strong>Berekende Werkuren: </strong>' +
-                '<span id="calculatedHours" class="fw-bold">' + totalHours.toFixed(1) + '</span> uur' +
-                '<div class="small text-warning mt-1">' +
-                '<i class="bi bi-exclamation-triangle me-1"></i>' +
-                'Let op: Dit lijkt veel werkuren voor één dag. Controleer uw tijden.' +
-                '</div>';
-        } else {
-            document.getElementById('calculatedHours').parentElement.parentElement.className = 
-                'alert alert-info d-flex align-items-center';
-            document.getElementById('calculatedHours').parentElement.innerHTML = 
-                '<strong>Berekende Werkuren: </strong>' +
-                '<span id="calculatedHours" class="fw-bold">' + totalHours.toFixed(1) + '</span> uur' +
-                '<div class="small text-muted mt-1">' +
-                'Dit wordt automatisch berekend op basis van start- en eindtijd minus pauze' +
-                '</div>';
-        }
+    });
+    
+    document.getElementById('calculatedHours').textContent = totalHours.toFixed(1);
+    
+    // Validate reasonable working hours
+    if (totalHours > 24) {
+        document.getElementById('calculatedHours').parentElement.parentElement.className = 
+            'alert alert-warning d-flex align-items-center';
+        document.getElementById('calculatedHours').parentElement.innerHTML = 
+            '<strong>Berekende Werkuren: </strong>' +
+            '<span id="calculatedHours" class="fw-bold">' + totalHours.toFixed(1) + '</span> uur' +
+            '<div class="small text-warning mt-1">' +
+            '<i class="bi bi-exclamation-triangle me-1"></i>' +
+            'Waarschuwing: Meer dan 24 uur totaal is ongebruikelijk. Controleer of alle tijden en pauzes correct zijn ingevoerd.' +
+            '</div>';
+    } else {
+        document.getElementById('calculatedHours').parentElement.parentElement.className = 
+            'alert alert-info d-flex align-items-center';
+        document.getElementById('calculatedHours').parentElement.innerHTML = 
+            '<strong>Berekende Werkuren: </strong>' +
+            '<span id="calculatedHours" class="fw-bold">' + totalHours.toFixed(1) + '</span> uur' +
+            '<div class="small text-muted mt-1">' +
+            'Dit wordt automatisch berekend op basis van alle tijdsloten minus pauzes' +
+            '</div>';
     }
 }
 
-// Add event listeners
-document.getElementById('startTime').addEventListener('change', calculateHours);
-document.getElementById('endTime').addEventListener('change', calculateHours);
-document.getElementById('breakDuration').addEventListener('input', calculateHours);
+// Add new time slot
+function addTimeSlot() {
+    const container = document.getElementById('timeSlotsContainer');
+    const newSlot = document.createElement('div');
+    newSlot.className = 'time-slot-row border rounded p-3 mb-3';
+    newSlot.setAttribute('data-slot-index', timeSlotCounter);
+    
+    newSlot.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <small class="text-muted fw-bold">Tijdslot ${timeSlotCounter + 1}</small>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-time-slot">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="form-label">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Datum <span class="text-danger">*</span>
+                </label>
+                <input type="date" class="form-control date-input" name="timeSlots[${timeSlotCounter}][date]" 
+                       value="${new Date().toISOString().split('T')[0]}" max="${new Date().toISOString().split('T')[0]}" required>
+                <div class="form-text">Datum van dit tijdslot</div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">
+                    <i class="bi bi-play-circle me-1"></i>
+                    Start Tijd <span class="text-danger">*</span>
+                </label>
+                <input type="time" class="form-control start-time" name="timeSlots[${timeSlotCounter}][startTime]" 
+                       value="09:00" required>
+                <div class="form-text">Wanneer bent u begonnen?</div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">
+                    <i class="bi bi-stop-circle me-1"></i>
+                    Eind Tijd <span class="text-danger">*</span>
+                </label>
+                <input type="time" class="form-control end-time" name="timeSlots[${timeSlotCounter}][endTime]" 
+                       value="17:00" required>
+                <div class="form-text">Wanneer bent u gestopt?</div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">
+                    <i class="bi bi-pause-circle me-1"></i>
+                    Pauze (minuten)
+                </label>
+                <input type="number" class="form-control break-duration" name="timeSlots[${timeSlotCounter}][breakDuration]" 
+                       value="0" min="0" max="480" step="15">
+                <div class="form-text">Pauzetijd voor dit tijdslot</div>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newSlot);
+    timeSlotCounter++;
+    
+    // Add event listeners to new inputs
+    addTimeSlotEventListeners(newSlot);
+    
+    // Update remove button visibility
+    updateRemoveButtonVisibility();
+    
+    // Recalculate hours
+    calculateHours();
+}
+
+// Remove time slot
+function removeTimeSlot(button) {
+    const slot = button.closest('.time-slot-row');
+    slot.remove();
+    
+    // Update slot numbers
+    updateSlotNumbers();
+    
+    // Update remove button visibility
+    updateRemoveButtonVisibility();
+    
+    // Recalculate hours
+    calculateHours();
+}
+
+// Update slot numbers and names
+function updateSlotNumbers() {
+    const slots = document.querySelectorAll('.time-slot-row');
+    slots.forEach((slot, index) => {
+        slot.setAttribute('data-slot-index', index);
+        slot.querySelector('small').textContent = `Tijdslot ${index + 1}`;
+        
+        // Update input names
+        slot.querySelector('.date-input').name = `timeSlots[${index}][date]`;
+        slot.querySelector('.start-time').name = `timeSlots[${index}][startTime]`;
+        slot.querySelector('.end-time').name = `timeSlots[${index}][endTime]`;
+        slot.querySelector('.break-duration').name = `timeSlots[${index}][breakDuration]`;
+    });
+    
+    timeSlotCounter = slots.length;
+}
+
+// Update remove button visibility
+function updateRemoveButtonVisibility() {
+    const slots = document.querySelectorAll('.time-slot-row');
+    const removeButtons = document.querySelectorAll('.remove-time-slot');
+    
+    removeButtons.forEach(button => {
+        button.style.display = slots.length > 1 ? 'block' : 'none';
+    });
+}
+
+// Add event listeners to time slot inputs
+function addTimeSlotEventListeners(slot) {
+    const startTime = slot.querySelector('.start-time');
+    const endTime = slot.querySelector('.end-time');
+    const breakDuration = slot.querySelector('.break-duration');
+    const removeButton = slot.querySelector('.remove-time-slot');
+    
+    startTime.addEventListener('change', calculateHours);
+    endTime.addEventListener('change', calculateHours);
+    breakDuration.addEventListener('input', calculateHours);
+    removeButton.addEventListener('click', () => removeTimeSlot(removeButton));
+}
+
+// Add event listeners to existing time slots
+function initializeTimeSlots() {
+    const existingSlots = document.querySelectorAll('.time-slot-row');
+    existingSlots.forEach(slot => {
+        addTimeSlotEventListeners(slot);
+    });
+    
+    updateRemoveButtonVisibility();
+}
+
+// Add time slot button event listener
+document.getElementById('addTimeSlot').addEventListener('click', addTimeSlot);
 
 // Form validation
 document.getElementById('workingHoursForm').addEventListener('submit', function(e) {
-    const startTime = document.getElementById('startTime').value;
-    const endTime = document.getElementById('endTime').value;
-    const date = document.getElementById('date').value;
+    const timeSlots = document.querySelectorAll('.time-slot-row');
     
-    // Check if end time is after start time (same day)
-    if (startTime && endTime && startTime >= endTime) {
-        e.preventDefault();
-        alert('Eindtijd moet na de starttijd zijn. Voor nachtdiensten, neem contact op met uw manager.');
-        return false;
-    }
+    // Validate each time slot
+    let hasValidationError = false;
+    timeSlots.forEach((slot, index) => {
+        const startTime = slot.querySelector('.start-time').value;
+        const endTime = slot.querySelector('.end-time').value;
+        const date = slot.querySelector('.date-input').value;
+        
+        if (startTime && endTime && startTime >= endTime) {
+            e.preventDefault();
+            alert(`Tijdslot ${index + 1}: Eindtijd moet na de starttijd zijn. Voor nachtdiensten, neem contact op met uw manager.`);
+            hasValidationError = true;
+            return;
+        }
+        
+        // Check if date is not in the future
+        const selectedDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate > today) {
+            e.preventDefault();
+            alert(`Tijdslot ${index + 1}: U kunt geen werkuren voor toekomstige datums invoeren.`);
+            hasValidationError = true;
+            return;
+        }
+    });
     
-    // Check if date is not in the future
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (selectedDate > today) {
-        e.preventDefault();
-        alert('U kunt geen werkuren voor toekomstige datums invoeren.');
+    if (hasValidationError) {
         return false;
     }
     
     // Check if total hours is reasonable
     const totalHours = parseFloat(document.getElementById('calculatedHours').textContent);
-    if (totalHours > 16) {
-        if (!confirm('U heeft meer dan 16 uur werkuren ingevoerd. Weet u zeker dat dit correct is?')) {
+    if (totalHours > 24) {
+        const message = `U heeft ${totalHours.toFixed(1)} werkuren ingevoerd in totaal.\n\n` +
+                       'Dit is ongebruikelijk veel (meer dan 24 uur totaal).\n' +
+                       'Controleer of alle start- en eindtijden correct zijn en of de pauzes juist zijn ingevuld.\n\n' +
+                       'Wilt u deze werkuren toch indienen?';
+        if (!confirm(message)) {
             e.preventDefault();
             return false;
         }
+    }
+    
+    // Ensure at least one time slot exists
+    if (timeSlots.length === 0) {
+        e.preventDefault();
+        alert('U moet minimaal één tijdslot toevoegen.');
+        return false;
     }
     
     return true;
@@ -240,6 +426,7 @@ document.getElementById('workingHoursForm').addEventListener('submit', function(
 
 // Initialize calculation on page load
 document.addEventListener('DOMContentLoaded', function() {
+    initializeTimeSlots();
     calculateHours();
 });
 </script>

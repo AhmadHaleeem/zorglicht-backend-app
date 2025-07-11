@@ -1,11 +1,7 @@
 const mongoose = require('mongoose');
 
-const workingHoursSchema = new mongoose.Schema({
-    employee: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employee',
-        required: true
-    },
+// Time slot schema for individual time entries
+const timeSlotSchema = new mongoose.Schema({
     date: {
         type: Date,
         required: true
@@ -35,6 +31,24 @@ const workingHoursSchema = new mongoose.Schema({
         default: 0,
         min: 0,
         max: 480 // Maximum 8 hours break
+    }
+}, { _id: false });
+
+const workingHoursSchema = new mongoose.Schema({
+    employee: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Employee',
+        required: true
+    },
+    timeSlots: {
+        type: [timeSlotSchema],
+        required: true,
+        validate: {
+            validator: function(v) {
+                return v && v.length > 0;
+            },
+            message: 'At least one time slot is required'
+        }
     },
     description: {
         type: String,
@@ -72,22 +86,32 @@ const workingHoursSchema = new mongoose.Schema({
 
 // Calculate total hours before saving
 workingHoursSchema.pre('save', function(next) {
-    if (this.startTime && this.endTime) {
-        const [startHour, startMin] = this.startTime.split(':').map(Number);
-        const [endHour, endMin] = this.endTime.split(':').map(Number);
+    if (this.timeSlots && this.timeSlots.length > 0) {
+        let totalMinutes = 0;
         
-        const startMinutes = startHour * 60 + startMin;
-        const endMinutes = endHour * 60 + endMin;
-        
-        let totalMinutes = endMinutes - startMinutes;
-        
-        // Handle overnight shifts
-        if (totalMinutes < 0) {
-            totalMinutes += 24 * 60;
-        }
-        
-        // Subtract break duration
-        totalMinutes -= this.breakDuration;
+        // Calculate total minutes from all time slots
+        this.timeSlots.forEach(slot => {
+            if (slot.startTime && slot.endTime) {
+                const [startHour, startMin] = slot.startTime.split(':').map(Number);
+                const [endHour, endMin] = slot.endTime.split(':').map(Number);
+                
+                const startMinutes = startHour * 60 + startMin;
+                const endMinutes = endHour * 60 + endMin;
+                
+                let slotMinutes = endMinutes - startMinutes;
+                
+                // Handle overnight shifts
+                if (slotMinutes < 0) {
+                    slotMinutes += 24 * 60;
+                }
+                
+                // Subtract break duration for this slot
+                slotMinutes -= (slot.breakDuration || 0);
+                
+                // Add to total (ensure non-negative)
+                totalMinutes += Math.max(0, slotMinutes);
+            }
+        });
         
         // Convert to hours with 2 decimal places
         this.totalHours = Math.round((totalMinutes / 60) * 100) / 100;
@@ -95,7 +119,7 @@ workingHoursSchema.pre('save', function(next) {
     next();
 });
 
-// Compound index for employee and date to prevent duplicate entries
-workingHoursSchema.index({ employee: 1, date: 1 }, { unique: true });
+// Index for employee to optimize queries
+workingHoursSchema.index({ employee: 1 });
 
 module.exports = mongoose.model('WorkingHours', workingHoursSchema);

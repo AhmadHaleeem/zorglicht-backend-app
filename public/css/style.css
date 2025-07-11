@@ -688,6 +688,58 @@ body {
 .badge .bi, .badge i[class*="bi-"] {
     font-size: 0.8rem;
     margin-right: 0.25rem;
+    color: inherit !important;
+}
+
+/* Ensure Bootstrap Icons are visible in all contexts */
+.bi, i[class*="bi-"] {
+    color: inherit;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+/* Button Icons - Ensure proper visibility */
+.btn .bi, .btn i[class*="bi-"] {
+    color: inherit !important;
+}
+
+/* Table Icons */
+.table .bi, .table i[class*="bi-"] {
+    color: inherit !important;
+}
+
+/* Badge specific icon colors */
+.badge-success .bi, .badge-success i[class*="bi-"],
+.bg-success .bi, .bg-success i[class*="bi-"] {
+    color: white !important;
+}
+
+.badge-danger .bi, .badge-danger i[class*="bi-"],
+.bg-danger .bi, .bg-danger i[class*="bi-"] {
+    color: white !important;
+}
+
+.badge-warning .bi, .badge-warning i[class*="bi-"],
+.bg-warning .bi, .bg-warning i[class*="bi-"] {
+    color: white !important;
+}
+
+.badge-info .bi, .badge-info i[class*="bi-"],
+.bg-info .bi, .bg-info i[class*="bi-"] {
+    color: white !important;
+}
+
+.badge-primary .bi, .badge-primary i[class*="bi-"],
+.bg-primary .bi, .bg-primary i[class*="bi-"] {
+    color: white !important;
+}
+
+.badge-secondary .bi, .badge-secondary i[class*="bi-"],
+.bg-secondary .bi, .bg-secondary i[class*="bi-"] {
+    color: white !important;
 }
 
 /* Zorglicht Healthcare Theme Icons */
@@ -808,6 +860,27 @@ body {
         margin-right: 0;
         padding: 0.5rem 0;
     }
+    
+    /* Ensure navbar text is visible on mobile */
+    .navbar-dark .navbar-nav .nav-link,
+    .navbar-dark .navbar-nav .dropdown-toggle {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    .navbar-dark .navbar-nav .nav-link:hover,
+    .navbar-dark .navbar-nav .dropdown-toggle:hover {
+        color: white !important;
+    }
+    
+    /* Ensure welcome message is visible */
+    .navbar .nav-link {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-weight: 500;
+    }
+    
+    .navbar .dropdown-toggle {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
 }
 
 /* Table Responsive Improvements */
@@ -825,6 +898,59 @@ body {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
     }
+    
+    /* Stack table cells vertically on very small screens */
+    .table-mobile-stack {
+        display: block;
+        width: 100%;
+    }
+    
+    .table-mobile-stack thead {
+        display: none;
+    }
+    
+    .table-mobile-stack tbody,
+    .table-mobile-stack tr,
+    .table-mobile-stack td {
+        display: block;
+        width: 100%;
+    }
+    
+    .table-mobile-stack tr {
+        border: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        background: white;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table-mobile-stack td {
+        border: none;
+        padding: 0.5rem 0;
+        text-align: left;
+        position: relative;
+        padding-left: 40%;
+    }
+    
+    .table-mobile-stack td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 35%;
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: 0.25rem;
+        border-radius: 0.375rem !important;
+    }
 }
 
 /* Form Responsive Improvements */
@@ -833,18 +959,139 @@ body {
         font-size: 16px; /* Prevent zoom on iOS */
     }
     
-    .input-group {
+    /* Keep search input groups intact on mobile */
+    .input-group:not(.search-group) {
         flex-direction: column;
     }
     
-    .input-group .form-control,
-    .input-group .btn {
+    .input-group:not(.search-group) .form-control,
+    .input-group:not(.search-group) .btn {
         border-radius: 0.375rem !important;
         margin-bottom: 0.5rem;
     }
     
-    .input-group .btn {
+    .input-group:not(.search-group) .btn {
         margin-bottom: 0;
+    }
+    
+    /* Ensure search input is full width */
+    .search-group .form-control {
+        width: 100% !important;
+        flex: 1 1 auto;
+    }
+}
+
+/* Enhanced Search and Filter Styling */
+.search-group {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.search-group:focus-within {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(78, 115, 223, 0.15);
+}
+
+.search-group .input-group-text {
+    border-right: none;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+}
+
+.search-group .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Filter Card Styling */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Form Select Enhancements */
+.form-select {
+    transition: all 0.3s ease;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+}
+
+.form-select:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.border-success:focus {
+    border-color: var(--success-color) !important;
+    box-shadow: 0 0 0 0.2rem rgba(28, 200, 138, 0.25) !important;
+}
+
+.border-info:focus {
+    border-color: var(--info-color) !important;
+    box-shadow: 0 0 0 0.2rem rgba(54, 185, 204, 0.25) !important;
+}
+
+/* File Card Hover Effects */
+.file-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e3e6f0;
+}
+
+.file-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+/* Button Enhancements */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(78, 115, 223, 0.3);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(133, 135, 150, 0.3);
+}
+
+/* Label Styling */
+.form-label {
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+}
+
+/* Mobile Responsive Improvements for Files Page */
+@media (max-width: 768px) {
+    .search-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .file-card {
+        margin-bottom: 1rem;
+    }
+    
+    .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.5rem;
     }
 }
 

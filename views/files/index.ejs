@@ -106,30 +106,74 @@
             </div>
             
             <!-- Search and Filter -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" id="searchFiles" placeholder="Zoek bestanden...">
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- Search Input -->
+                        <div class="col-lg-6">
+                            <label for="searchFiles" class="form-label fw-semibold text-muted mb-2">
+                                <i class="bi bi-search me-1"></i>
+                                Zoeken in bestanden
+                            </label>
+                            <div class="input-group search-group">
+                                <span class="input-group-text bg-primary text-white border-primary">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control border-primary" id="searchFiles" 
+                                       placeholder="Typ hier om te zoeken..." 
+                                       style="border-left: none;">
+                                <button class="btn btn-outline-primary" type="button" onclick="clearSearch()">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter by Type -->
+                        <div class="col-lg-3 col-md-6">
+                            <label for="filterType" class="form-label fw-semibold text-muted mb-2">
+                                <i class="bi bi-funnel me-1"></i>
+                                Bestandstype
+                            </label>
+                            <select class="form-select border-success" id="filterType">
+                                <option value="">🗂️ Alle typen</option>
+                                <option value="pdf">📄 PDF Documenten</option>
+                                <option value="image">🖼️ Afbeeldingen</option>
+                                <option value="excel">📊 Excel Bestanden</option>
+                                <option value="word">📝 Word Documenten</option>
+                                <option value="text">📃 Tekst Bestanden</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort Options -->
+                        <div class="col-lg-3 col-md-6">
+                            <label for="sortBy" class="form-label fw-semibold text-muted mb-2">
+                                <i class="bi bi-sort-down me-1"></i>
+                                Sorteren
+                            </label>
+                            <select class="form-select border-info" id="sortBy">
+                                <option value="naam">🔤 Naam (A-Z)</option>
+                                <option value="uploaddatum">📅 Upload Datum</option>
+                                <option value="grootte">📏 Bestandsgrootte</option>
+                                <option value="type">🏷️ Bestandstype</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="filterType">
-                        <option value="">Alle typen</option>
-                        <option value="pdf">PDF</option>
-                        <option value="image">Afbeeldingen</option>
-                        <option value="excel">Excel</option>
-                        <option value="word">Word</option>
-                        <option value="text">Tekst</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="sortBy">
-                        <option value="naam">Sorteer op naam</option>
-                        <option value="uploaddatum">Sorteer op datum</option>
-                        <option value="grootte">Sorteer op grootte</option>
-                        <option value="type">Sorteer op type</option>
-                    </select>
+                    
+                    <!-- Filter Summary -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    <span id="filterSummary">Alle <%= files.length %> bestanden worden getoond</span>
+                                </small>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()" style="display: none;" id="resetBtn">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                    Reset filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -276,10 +320,14 @@ function getFileCategory(mimeType) {
 document.getElementById('searchFiles').addEventListener('input', function() {
     const searchTerm = this.value.toLowerCase();
     filterFiles();
+    updateFilterSummary();
 });
 
 // Filter functionality
-document.getElementById('filterType').addEventListener('change', filterFiles);
+document.getElementById('filterType').addEventListener('change', function() {
+    filterFiles();
+    updateFilterSummary();
+});
 document.getElementById('sortBy').addEventListener('change', sortFiles);
 
 function filterFiles() {
@@ -301,6 +349,44 @@ function filterFiles() {
             item.style.display = 'none';
         }
     });
+}
+
+// Clear search function
+function clearSearch() {
+    document.getElementById('searchFiles').value = '';
+    filterFiles();
+    updateFilterSummary();
+}
+
+// Reset all filters
+function resetFilters() {
+    document.getElementById('searchFiles').value = '';
+    document.getElementById('filterType').value = '';
+    document.getElementById('sortBy').value = 'naam';
+    filterFiles();
+    sortFiles();
+    updateFilterSummary();
+}
+
+// Update filter summary
+function updateFilterSummary() {
+    const searchTerm = document.getElementById('searchFiles').value;
+    const filterType = document.getElementById('filterType').value;
+    const visibleItems = document.querySelectorAll('.file-item[style*="block"], .file-item:not([style*="none"])');
+    const totalItems = document.querySelectorAll('.file-item').length;
+    const resetBtn = document.getElementById('resetBtn');
+    const summary = document.getElementById('filterSummary');
+    
+    let summaryText = '';
+    if (searchTerm || filterType) {
+        summaryText = `${visibleItems.length} van ${totalItems} bestanden gevonden`;
+        resetBtn.style.display = 'inline-block';
+    } else {
+        summaryText = `Alle ${totalItems} bestanden worden getoond`;
+        resetBtn.style.display = 'none';
+    }
+    
+    summary.textContent = summaryText;
 }
 
 function sortFiles() {
