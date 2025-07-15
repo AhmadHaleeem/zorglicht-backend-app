@@ -1,6 +1,6 @@
-# Backend Admin App
+# Zorglicht Thuiszorg - Admin Management System
 
-A professional admin dashboard for employee and role management built with Node.js, Express, and MongoDB.
+A comprehensive healthcare administration platform for managing employees, leave requests, working hours, and organizational operations. Built with Node.js, Express, and MongoDB.
 
 ## Features
 
@@ -18,6 +18,7 @@ A professional admin dashboard for employee and role management built with Node.
 - Pagination for large datasets
 - Role-based visibility controls
 - Password management and updates
+- Employee status management (active/inactive)
 
 ### 📁 File Management
 - File upload with Cloudinary integration
@@ -25,19 +26,42 @@ A professional admin dashboard for employee and role management built with Node.
 - File association with employees
 - Download and delete capabilities
 - File type validation and size limits
+- Bulk file upload functionality
+- Individual employee file management
 
 ### 🎯 Role Management
 - Dynamic role creation and management
 - Permission-based access control
 - Role assignment to employees
 - Active/inactive role status
+- Role-based feature access
+
+### 🏖️ Leave Request Management
+- Employee leave request submission
+- Admin approval/rejection workflow
+- Leave request status tracking
+- Date validation and conflict prevention
+- Leave history and reporting
+- Email notifications for status changes
+
+### ⏰ Working Hours Management
+- Time tracking and registration
+- Multiple time slots per day
+- Admin review and approval system
+- Working hours calculation
+- Status tracking (pending, approved, rejected)
+- Edit functionality for pending entries
+- Comprehensive time reporting
 
 ### 📊 Dashboard
 - Overview statistics and metrics
 - Recent employee activities
 - Department-wise analytics
 - File upload statistics
+- Leave request summaries
+- Working hours tracking
 - Quick action buttons (admin only)
+- Role-based dashboard views
 
 ### 🎨 User Interface
 - Responsive Bootstrap-based design
@@ -45,6 +69,8 @@ A professional admin dashboard for employee and role management built with Node.
 - Mobile-friendly layout
 - Flash messages for user feedback
 - Intuitive navigation
+- Custom branding with company logo
+- Dark theme navigation
 
 ## Technology Stack
 
@@ -105,9 +131,9 @@ Before running this application, make sure you have:
 4. **Database Setup**
    
    The application will automatically create default data on first run:
-   - Default admin user: `admin@example.com` / `admin123`
-   - Default regular user: `user@example.com` / `user123`
-   - Default roles: admin and user
+   - Default administrative and employee accounts
+   - Required system roles (admin and user)
+   - Initial database schema and collections
 
 5. **Start the application**
    
@@ -127,33 +153,30 @@ Before running this application, make sure you have:
 
 ## Usage
 
-### Default Login Credentials
+### Getting Started
 
-**Admin User:**
-- Email: `admin@example.com`
-- Password: `admin123`
-
-**Regular User:**
-- Email: `user@example.com`
-- Password: `user123`
+The application comes with pre-configured default accounts for immediate testing and setup. Check the server console output during first startup for login credentials.
 
 ### Admin Features
 
-As an admin, you can:
-- View and manage all employees
-- Create, edit, and delete employee records
-- Upload and manage files
-- Manage roles and permissions
-- Access all dashboard statistics
-- Change employee passwords
+Administrators have full system access including:
+- Complete employee management (create, read, update, delete)
+- File management and bulk uploads
+- Role and permission management
+- Leave request approval/rejection
+- Working hours review and approval
+- System-wide dashboard analytics
+- Password management for all users
 
-### User Features
+### Employee Features
 
-As a regular user, you can:
-- View your own profile
-- View other employee profiles (read-only)
-- Access basic dashboard information
-- Cannot edit, delete, or create new records
+Regular employees can:
+- View and edit their own profile
+- Submit leave requests
+- Register and track working hours
+- Upload and manage personal files
+- View basic dashboard information
+- Access read-only employee directory
 
 ## Project Structure
 
@@ -167,7 +190,9 @@ backend-admin-app/
 ├── models/
 │   ├── Employee.js          # Employee data model
 │   ├── File.js              # File data model
-│   └── Role.js              # Role data model
+│   ├── LeaveRequest.js      # Leave request data model
+│   ├── Role.js              # Role data model
+│   └── WorkingHours.js      # Working hours data model
 ├── views/
 │   ├── auth/
 │   │   └── login.ejs        # Login page
@@ -179,10 +204,21 @@ backend-admin-app/
 │   ├── files/
 │   │   ├── index.ejs        # File management
 │   │   └── upload.ejs       # File upload
+│   ├── leave-requests/
+│   │   ├── index.ejs        # Leave requests overview
+│   │   └── new.ejs          # New leave request form
 │   ├── roles/
-│   │   └── ...              # Role management views
+│   │   ├── index.ejs        # Role management
+│   │   ├── show.ejs         # Role details
+│   │   ├── edit.ejs         # Role edit form
+│   │   └── new.ejs          # New role form
+│   ├── working-hours/
+│   │   ├── index.ejs        # Working hours overview
+│   │   ├── show.ejs         # Working hours details
+│   │   ├── edit.ejs         # Working hours edit form
+│   │   └── new.ejs          # New working hours form
 │   ├── partials/
-│   │   ├── header.ejs       # Header component
+│   │   ├── header.ejs       # Header component with logo
 │   │   ├── sidebar.ejs      # Sidebar navigation
 │   │   └── footer.ejs       # Footer component
 │   ├── dashboard.ejs        # Main dashboard
@@ -216,17 +252,37 @@ backend-admin-app/
 
 ### Files
 - `GET /bestanden` - File management
-- `GET /bestanden/upload` - File upload form
-- `POST /bestanden/upload` - Upload file
+- `GET /bestanden/uploaden` - File upload form
+- `POST /bestanden/uploaden` - Upload files (bulk)
+- `POST /werknemers/:id/upload` - Upload file for specific employee
 - `DELETE /bestanden/:id` - Delete file
+- `GET /bestanden/:id/download` - Download file
 
 ### Roles
 - `GET /rollen` - List all roles
 - `GET /rollen/nieuw` - New role form
 - `POST /rollen` - Create new role
 - `GET /rollen/:id` - View role details
+- `GET /rollen/:id/bewerken` - Edit role form
 - `PUT /rollen/:id` - Update role
 - `DELETE /rollen/:id` - Delete role
+
+### Leave Requests
+- `GET /verlofaanvragen` - List leave requests
+- `GET /verlofaanvragen/nieuw` - New leave request form
+- `POST /verlofaanvragen` - Create leave request
+- `PUT /verlofaanvragen/:id` - Update leave request status (admin)
+- `DELETE /verlofaanvragen/:id` - Delete leave request (admin)
+
+### Working Hours
+- `GET /werkuren` - List working hours
+- `GET /werkuren/nieuw` - New working hours form
+- `POST /werkuren` - Create working hours entry
+- `GET /werkuren/:id` - View working hours details
+- `GET /werkuren/:id/bewerken` - Edit working hours form
+- `PUT /werkuren/:id` - Update working hours
+- `PUT /werkuren/:id/beoordelen` - Review working hours (admin)
+- `DELETE /werkuren/:id` - Delete working hours
 
 ## Security Features
 
