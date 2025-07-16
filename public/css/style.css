@@ -465,7 +465,7 @@ body {
 
 .sidebar .nav-link:hover .bi,
 .sidebar .nav-link:hover i[class*="bi-"] {
-    color: white;
+    color: #667eea;
     transform: scale(1.1);
 }
 
