@@ -15,10 +15,16 @@ const uploadToCloudinary = async (file, folder = 'documents') => {
         const fileName = file.originalname || 'unknown';
         const fileNameWithoutExt = fileName.includes('.') ? fileName.split('.')[0] : fileName;
         
+        // Sanitize filename for Cloudinary public_id (only alphanumeric, hyphens, underscores allowed)
+        const sanitizedFileName = fileNameWithoutExt
+            .replace(/[^a-zA-Z0-9\-_]/g, '_') // Replace invalid characters with underscores
+            .replace(/_+/g, '_') // Replace multiple consecutive underscores with single underscore
+            .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+        
         const result = await cloudinary.uploader.upload(file.path, {
             folder: folder,
             resource_type: 'auto',
-            public_id: `${Date.now()}_${fileNameWithoutExt}`,
+            public_id: `${Date.now()}_${sanitizedFileName}`,
             use_filename: true,
             unique_filename: false,
         });
