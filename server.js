@@ -1252,7 +1252,7 @@ app.get('/bestanden/:id/download', requireAuth, async (req, res) => {
         // Use existing download URL or generate a new one
         let downloadUrl = file.downloadUrl;
         if (!downloadUrl && file.cloudinaryPublicId) {
-            downloadUrl = generateCloudinaryDownloadUrl(file.cloudinaryPublicId);
+            downloadUrl = generateCloudinaryDownloadUrl(file.cloudinaryPublicId, file.originalName);
         }
         
         if (downloadUrl) {

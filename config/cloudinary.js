@@ -68,10 +68,20 @@ const getFileMetadata = async (publicId) => {
 
 // Generate download URL
 const generateDownloadUrl = (publicId, originalFilename) => {
-    return cloudinary.url(publicId, {
+    const options = {
         flags: 'attachment',
-        resource_type: 'auto'
-    });
+        resource_type: 'auto',
+        sign_url: true,
+        type: 'upload'
+    };
+    
+    // If original filename is provided, use it for the download filename
+    if (originalFilename) {
+        // Use the attachment flag with filename parameter
+        options.flags = `attachment:${originalFilename}`;
+    }
+    
+    return cloudinary.url(publicId, options);
 };
 
 module.exports = {

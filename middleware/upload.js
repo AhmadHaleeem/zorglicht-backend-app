@@ -80,9 +80,9 @@ async function getCloudinaryFileMetadata(publicId) {
 }
 
 // Generate download URL for Cloudinary file
-async function generateCloudinaryDownloadUrl(publicId) {
+async function generateCloudinaryDownloadUrl(publicId, originalFilename) {
     try {
-        const url = await generateDownloadUrl(publicId);
+        const url = generateDownloadUrl(publicId, originalFilename);
         return url;
     } catch (error) {
         console.error('Cloudinary URL generation error:', error);
