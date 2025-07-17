@@ -682,7 +682,7 @@ app.put('/werknemers/:id', requireAdminOrSelf, async (req, res) => {
             email: req.body.email,
             telefoon: req.body.telefoon,
             functie: req.body.functie,
-            salaris: parseInt(req.body.salaris) || employee.salaris
+            salaris: req.body.salaris ? parseInt(req.body.salaris) : null
         };
         
         // Only admin can change role
@@ -1113,6 +1113,12 @@ app.post('/bestanden/uploaden', requireAdmin, upload.array('files', 5), async (r
                     throw new Error(`Owner with ID ${ownerId} not found`);
                 }
                 
+                // Determine folder - use custom folder if provided, otherwise use selected folder
+                let folder = req.body.folder || 'documents';
+                if (folder === 'custom' && req.body.customFolder) {
+                    folder = req.body.customFolder.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+                }
+                
                 const newFile = new File({
                     naam: file.originalname,
                     originalName: file.originalname,
@@ -1122,7 +1128,8 @@ app.post('/bestanden/uploaden', requireAdmin, upload.array('files', 5), async (r
                     type: uploadResult.type,
                     cloudinaryPublicId: uploadResult.cloudinaryPublicId,
                     cloudinaryUrl: uploadResult.cloudinaryUrl,
-                    downloadUrl: uploadResult.downloadUrl
+                    downloadUrl: uploadResult.downloadUrl,
+                    folder: folder
                 });
                 
                 await newFile.save();
@@ -1252,7 +1259,7 @@ app.get('/bestanden/:id/download', requireAuth, async (req, res) => {
         // Use existing download URL or generate a new one
         let downloadUrl = file.downloadUrl;
         if (!downloadUrl && file.cloudinaryPublicId) {
-            downloadUrl = generateCloudinaryDownloadUrl(file.cloudinaryPublicId, file.originalName);
+            downloadUrl = generateCloudinaryDownloadUrl(file.cloudinaryPublicId, file.originalName, file.resourceType || 'raw');
         }
         
         if (downloadUrl) {

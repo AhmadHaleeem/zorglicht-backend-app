@@ -128,19 +128,42 @@
                             </div>
                         </div>
                         
+                        <!-- Filter by Folder -->
+                        <div class="col-lg-2 col-md-6">
+                            <label for="filterFolder" class="form-label fw-semibold text-muted mb-2">
+                                <i class="bi bi-folder me-1"></i>
+                                Map
+                            </label>
+                            <select class="form-select border-warning" id="filterFolder">
+                                <option value="">📁 Alle mappen</option>
+                                <% const folders = [...new Set(files.map(f => f.folder || 'documents'))].sort(); %>
+                                <% folders.forEach(folder => { %>
+                                    <option value="<%= folder %>">
+                                        <% if (folder === 'documents') { %>📁 Documenten
+                                        <% } else if (folder === 'contracts') { %>📄 Contracten
+                                        <% } else if (folder === 'reports') { %>📊 Rapporten
+                                        <% } else if (folder === 'images') { %>🖼️ Afbeeldingen
+                                        <% } else if (folder === 'certificates') { %>🏆 Certificaten
+                                        <% } else if (folder === 'personal') { %>👤 Persoonlijk
+                                        <% } else { %>📂 <%= folder.charAt(0).toUpperCase() + folder.slice(1) %><% } %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
                         <!-- Filter by Type -->
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-2 col-md-6">
                             <label for="filterType" class="form-label fw-semibold text-muted mb-2">
                                 <i class="bi bi-funnel me-1"></i>
-                                Bestandstype
+                                Type
                             </label>
                             <select class="form-select border-success" id="filterType">
                                 <option value="">🗂️ Alle typen</option>
-                                <option value="pdf">📄 PDF Documenten</option>
+                                <option value="pdf">📄 PDF</option>
                                 <option value="image">🖼️ Afbeeldingen</option>
-                                <option value="excel">📊 Excel Bestanden</option>
-                                <option value="word">📝 Word Documenten</option>
-                                <option value="text">📃 Tekst Bestanden</option>
+                                <option value="excel">📊 Excel</option>
+                                <option value="word">📝 Word</option>
+                                <option value="text">📃 Tekst</option>
                             </select>
                         </div>
                         
@@ -197,7 +220,8 @@
                              data-name="<%= file.naam.toLowerCase() %>" 
                              data-type="<%= file.type %>" 
                              data-date="<%= file.uploadDatum %>" 
-                             data-size="<%= file.grootte %>">
+                             data-size="<%= file.grootte %>"
+                             data-folder="<%= file.folder || 'documents' %>">
                             <div class="card h-100 file-card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -247,6 +271,17 @@
                                     </h6>
                                     
                                     <div class="file-details">
+                                        <small class="text-muted d-block">
+                                            <i class="bi bi-folder me-1"></i>
+                                            <% const folder = file.folder || 'documents'; %>
+                                            <% if (folder === 'documents') { %>📁 Documenten
+                                            <% } else if (folder === 'contracts') { %>📄 Contracten
+                                            <% } else if (folder === 'reports') { %>📊 Rapporten
+                                            <% } else if (folder === 'images') { %>🖼️ Afbeeldingen
+                                            <% } else if (folder === 'certificates') { %>🏆 Certificaten
+                                            <% } else if (folder === 'personal') { %>👤 Persoonlijk
+                                            <% } else { %>📂 <%= folder.charAt(0).toUpperCase() + folder.slice(1) %><% } %>
+                                        </small>
                                         <small class="text-muted d-block">
                                             <i class="bi bi-calendar me-1"></i>
                                             <%= file.uploadDatum ? new Date(file.uploadDatum).toLocaleDateString('nl-NL') : 'Onbekende datum' %>
@@ -328,22 +363,29 @@ document.getElementById('filterType').addEventListener('change', function() {
     filterFiles();
     updateFilterSummary();
 });
+document.getElementById('filterFolder').addEventListener('change', function() {
+    filterFiles();
+    updateFilterSummary();
+});
 document.getElementById('sortBy').addEventListener('change', sortFiles);
 
 function filterFiles() {
     const searchTerm = document.getElementById('searchFiles').value.toLowerCase();
     const filterType = document.getElementById('filterType').value;
+    const filterFolder = document.getElementById('filterFolder').value;
     const fileItems = document.querySelectorAll('.file-item');
     
     fileItems.forEach(item => {
         const name = item.dataset.name;
         const type = item.dataset.type;
+        const folder = item.dataset.folder;
         const fileCategory = getFileCategory(type);
         
         const matchesSearch = name.includes(searchTerm);
         const matchesType = !filterType || fileCategory === filterType;
+        const matchesFolder = !filterFolder || folder === filterFolder;
         
-        if (matchesSearch && matchesType) {
+        if (matchesSearch && matchesType && matchesFolder) {
             item.style.display = 'block';
         } else {
             item.style.display = 'none';
@@ -362,6 +404,7 @@ function clearSearch() {
 function resetFilters() {
     document.getElementById('searchFiles').value = '';
     document.getElementById('filterType').value = '';
+    document.getElementById('filterFolder').value = '';
     document.getElementById('sortBy').value = 'naam';
     filterFiles();
     sortFiles();
@@ -372,13 +415,14 @@ function resetFilters() {
 function updateFilterSummary() {
     const searchTerm = document.getElementById('searchFiles').value;
     const filterType = document.getElementById('filterType').value;
+    const filterFolder = document.getElementById('filterFolder').value;
     const visibleItems = document.querySelectorAll('.file-item[style*="block"], .file-item:not([style*="none"])');
     const totalItems = document.querySelectorAll('.file-item').length;
     const resetBtn = document.getElementById('resetBtn');
     const summary = document.getElementById('filterSummary');
     
     let summaryText = '';
-    if (searchTerm || filterType) {
+    if (searchTerm || filterType || filterFolder) {
         summaryText = `${visibleItems.length} van ${totalItems} bestanden gevonden`;
         resetBtn.style.display = 'inline-block';
     } else {

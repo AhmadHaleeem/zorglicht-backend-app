@@ -67,10 +67,10 @@ const getFileMetadata = async (publicId) => {
 };
 
 // Generate download URL
-const generateDownloadUrl = (publicId, originalFilename) => {
+const generateDownloadUrl = (publicId, originalFilename, resourceType = 'auto') => {
     const options = {
         flags: 'attachment',
-        resource_type: 'auto',
+        resource_type: resourceType,
         sign_url: true,
         type: 'upload'
     };

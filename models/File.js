@@ -28,6 +28,10 @@ const fileSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    resourceType: {
+        type: String,
+        required: false
+    },
     cloudinaryPublicId: {
         type: String,
         required: true
